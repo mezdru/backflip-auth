@@ -7,15 +7,6 @@ app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
-
-app.use(function(req, res, next){
-  console.log((Date.now) + 'req recieve !');
-  if('POST' === req.method){
-    console.log(req.body);
-  }
-  next();
-});
-
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
@@ -26,7 +17,6 @@ app.use(function(req, res, next) {
     res.send(200);
   }
   else {
-  //move on
     next();
   }
 });
@@ -65,6 +55,11 @@ app.use('/auth/locale', oauth2.token);
 app.get('/auth/google', passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email']}));
 app.get('/google/login/callback', passport.authenticate('google'), function(req, res, next){
   return res.status(200).json(req.user);
+});
+
+// Example of secure API route
+app.get('/test/secure', passport.authenticate('bearer', {session: false}), function(req, res, next){
+  res.status(200).json(req.user);
 });
 
 // catch 404 and forward to error handler
