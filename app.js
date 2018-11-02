@@ -3,15 +3,36 @@ var express = require('express');
 var app = express();
 let passport = require('passport');
 var mongoose = require('mongoose');
-
 app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
+
+app.use(function(req, res, next){
+  console.log((Date.now) + 'req recieve !');
+  if('POST' === req.method){
+    console.log(req.body);
+  }
   next();
 });
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  //intercepts OPTIONS method
+  if ('OPTIONS' === req.method) {
+    //respond with 200
+    res.send(200);
+  }
+  else {
+  //move on
+    next();
+  }
+});
+
+
+
 
 // Database
 mongoose.plugin(schema => { schema.options.usePushEach = true; });
