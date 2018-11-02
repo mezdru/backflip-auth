@@ -35,9 +35,8 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
         try{
             if (!user.checkPassword(password)) { return done(null, false); }
         }catch(error){
-            console.log(error);
             error.status = 403;
-            return done(error, null, null);
+            return done(null, false);
         }
 
         RefreshTokenModel.remove({ userId: user._id, clientId: client.clientId }, function (err) {
