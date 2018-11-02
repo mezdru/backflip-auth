@@ -39,6 +39,23 @@ app.use(function(req, res, next) {
 
 
 
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  //intercepts OPTIONS method
+  if ('OPTIONS' === req.method) {
+    //respond with 200
+    res.send(200);
+  }
+  else {
+    next();
+  }
+});
+
+
+
+
 // Database
 mongoose.plugin(schema => { schema.options.usePushEach = true; });
 mongoose.connect(process.env.MONGODB_URI, {useNewUrlParser: true});
@@ -70,6 +87,11 @@ app.use('/auth/locale', oauth2.token);
 app.get('/auth/google', passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email']}));
 app.get('/google/login/callback', passport.authenticate('google'), function(req, res, next){
   return res.status(200).json(req.user);
+});
+
+// Example of secure API route
+app.get('/test/secure', passport.authenticate('bearer', {session: false}), function(req, res, next){
+  res.status(200).json(req.user);
 });
 
 // catch 404 and forward to error handler
