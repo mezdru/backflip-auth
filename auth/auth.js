@@ -83,24 +83,23 @@ passport.use(new GoogleStrategy({
             User.findByGoogleOrCreate(profile)
             .then((user)=>{
                 let tokenModel = {userId: user._id, clientId: client.clientId};
-
-                // Remove old tokens
-                RefreshTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
-                AccessTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
-
+                
                 // RefreshToken is not always sent by google
                 if(refreshToken){
+                    RefreshTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
                     tokenModel.token = refreshToken;
                     (new RefreshTokenModel(tokenModel)).save(function(err){
                         if(err) return done(err);
                     });
                 }
+
+                // AccessToken handle
+                AccessTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
                 tokenModel.token = token;
                 (new AccessTokenModel(tokenModel)).save(function(err){
                     if(err) return done(err);
                 });
                 
-
                 return done(null, token, refreshToken, user);
             }).catch((error)=>{
                 return done(error);
