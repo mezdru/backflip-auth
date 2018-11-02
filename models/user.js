@@ -3,23 +3,8 @@ let crypto = require('crypto');
 let normalizeEmail = require('express-validator/node_modules/validator/lib/normalizeEmail.js');
 
 let userSchema = mongoose.Schema({
-  orgsAndRecords: [
-    {
-      _id: false,
-      // Can be populated or not, use getId to get Id.
-      organisation: {type: mongoose.Schema.Types.ObjectId, ref: 'Organisation', default: null},
-      // Can be populated or not, use getId to get Id.
-      record: {type: mongoose.Schema.Types.ObjectId, ref: 'Record', default: null},
-      admin: Boolean,
-      monthly: { type: Boolean, default: true },
-      welcomed: { type: Boolean, default: false }
-    }
-  ],
-  locale: {type: String, default: 'en' },
-  name: String,
   google: {
     id: {type: String, index: true, unique: true, sparse: true},
-    //@todo rename to primaryEmail
     email: {type: String, index: true, unique: true, sparse: true},
     normalized: {type: String, index: true, unique: true, sparse: true},
     hd: String,
@@ -39,20 +24,9 @@ let userSchema = mongoose.Schema({
   },
   last_login: { type: Date },
   last_action: {type: Date},
-  invitations: [
-    {
-      _id: false,
-      organisation: {type: mongoose.Schema.Types.ObjectId, ref: 'Organisation', default: null},
-      user: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
-      code: String,
-      created: { type: Date, default: Date.now }
-    }
-  ],
   created: { type: Date, default: Date.now },
   updated: { type: Date, default: Date.now },
-  welcomed: { type: Boolean, default: false },
   superadmin: Boolean,
-  senderEmail: String,
   hashedPassword: {type: String},
   salt: {type: String}
 });
