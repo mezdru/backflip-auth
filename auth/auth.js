@@ -83,7 +83,7 @@ passport.use(new GoogleStrategy({
             User.findByGoogleOrCreate(profile)
             .then((user)=>{
                 let tokenModel = {userId: user._id, clientId: client.clientId};
-                
+
                 // RefreshToken is not always sent by google
                 if(refreshToken){
                     RefreshTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
@@ -100,6 +100,7 @@ passport.use(new GoogleStrategy({
                     if(err) return done(err);
                 });
                 
+
                 return done(null, token, refreshToken, user);
             }).catch((error)=>{
                 return done(error);
