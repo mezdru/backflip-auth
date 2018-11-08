@@ -12,15 +12,6 @@ app.use(function(req, res, next) {
   next();
 });
 
-
-app.use(function(req, res, next){
-  console.log((Date.now) + 'req recieve !');
-  if('POST' === req.method){
-    console.log(req.body);
-  }
-  next();
-});
-
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
@@ -93,6 +84,9 @@ app.get('/google/login/callback', passport.authenticate('google'), function(req,
 app.get('/test/secure', passport.authenticate('bearer', {session: false}), function(req, res, next){
   res.status(200).json(req.user);
 });
+
+let authorization = require('./authorization/authorization');
+app.use('/authorization', passport.authenticate('bearer', {session: false}), authorization);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
