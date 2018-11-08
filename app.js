@@ -86,7 +86,7 @@ app.get('/test/secure', passport.authenticate('bearer', {session: false}), funct
 });
 
 let authorization = require('./authorization/authorization');
-app.use('/authorization', authorization);
+app.use('/authorization', passport.authenticate('bearer', {session: false}), authorization);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
