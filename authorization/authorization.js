@@ -8,7 +8,7 @@ router.post('/authorization/organisation/:orgTag', function(req, res, next) {
         if(!organisation) return res.status(404).json({message: 'Organisation not found.'});
         res.locals.organisation = organisation;
         return next();
-    });
+    }).catch(resWithError);
 });
 
 router.post('/authorization/organisation/:orgTag/:invitationCode?', function(req, res, next) {
@@ -41,7 +41,11 @@ router.post('/authorization/organisation/:orgTag', function(req, res, next) {
     req.user.save()
     .then(() => {
         return res.status(200).json({message: 'User registered in organisation.', organisation: res.locals.organisation});
-    });
+    }).catch(resWithError);
 });
+
+let resWithError = (err) => {
+    return res.status(500).json({message: 'Internal error', errors: [err]});
+};
 
 module.exports = router;

@@ -44,7 +44,7 @@ router.post('/register', function(req, res, next){
 // REGISTER NEW USER
 router.post('/register', function(req, res, next){
     User.findOneByEmail(req.body.email, function(err, user) {
-        if(err) return res.status(500).json({message: 'Internal errors', errors: err});
+        if(err) return resWithError(err);
         if(user) return res.status(400).json({message: 'User already exists.'});
 
         // register user 
@@ -56,10 +56,12 @@ router.post('/register', function(req, res, next){
         newUser.save()
         .then(() => {
             return res.status(200).json({message: 'User created with success.', user: user});
-        }).catch((err) => {
-            return res.status(500).json({message: 'Internal error. User not saved.', errors: err});
-        });
+        }).catch(resWithError);
     });    
 });
+
+let resWithError = (err) => {
+    return res.status(500).json({message: 'Internal error', errors: [err]});
+};
 
 module.exports = router;
