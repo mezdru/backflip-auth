@@ -4,13 +4,16 @@ var Organisation = require('../models/organisation');
 const { body,validationResult } = require('express-validator/check');
 const { sanitizeBody } = require('express-validator/filter');
 let dumbPasswords = require('dumb-passwords');
+let User = require('../models/user');
+var md5 = require('md5');
 
 // CHECK PARAMS
-router.post('/register', function(req, res, next){
+router.post('/', function(req, res, next){
     if(!req.body.email ||!req.body.password) return res.status(400).json({message: 'Missing parameters'});
+    next();
 });
 
-router.post('/register',
+router.post('/',
 sanitizeBody('email').trim().normalizeEmail({
         gmail_remove_subaddress:false,
         gmail_remove_dots: false,
@@ -20,7 +23,7 @@ sanitizeBody('email').trim().normalizeEmail({
     })
 );
 
-router.post('/register',
+router.post('/',
     body('email').isEmail().withMessage((value, {req}) => {
         'Please provide a valid Email Address'
     }),
@@ -32,7 +35,7 @@ router.post('/register',
 /**
  * @description Check if password is not dumb.
  */
-router.post('/register', function(req, res, next){
+router.post('/', function(req, res, next){
     var errors = validationResult(req);
     if(dumbPasswords.check(req.body.password)){
         const rate = dumbPasswords.rateOfUsage(req.body.password);
@@ -46,22 +49,26 @@ router.post('/register', function(req, res, next){
 /**
  * @description Register new user if not already existing
  */
-router.post('/register', function(req, res, next){
+router.post('/', function(req, res, next){
     User.findOneByEmail(req.body.email, function(err, user) {
         if(err) return resWithError(err);
         if(user) return res.status(400).json({message: 'User already exists.'});
 
         // register user 
         let newUser = new User();
-        newUser.email = {value: email};
+        newUser.email = {value: req.body.email};
         newUser.password = req.body.password;
         newUser.email.normalized = User.normalizeEmail(newUser.email.value);
         newUser.email.hash = md5(newUser.email.normalized);
+        newUser.email.generated = Date.now();
         newUser.save()
-        .then(() => {
-            return res.status(200).json({message: 'User created with success.', user: user});
+        .then((userSaved) => {
+            // do not send password data
+            userSaved.hashedPassword = undefined;
+            userSaved.salt = undefined;
+            return res.status(200).json({message: 'User created with success.', user: userSaved});
         }).catch(resWithError);
-    });    
+    });
 });
 
 let resWithError = (err) => {

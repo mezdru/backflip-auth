@@ -28,8 +28,7 @@ let generateTokens = function(userId, clientId, done){
 // Exchange username & password for an access token.
 // This is in case of Login, we should call this after user is created for a person
 server.exchange(oauth2orize.exchange.password(function(client, email, password, scope, done) {    
-    User.findOneByEmail(email, function(err, user) {
-        if (err) { return done(err); }
+    User.findOneByEmailWithPassword(email).then(user => {
         if (!user) { return done(null, false); }
 
         try{
@@ -47,6 +46,8 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
         });
 
         return generateTokens(user._id, client.clientId, done);
+    }).catch(err => {
+        return done(err);
     });
 }));
 

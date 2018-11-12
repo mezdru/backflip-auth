@@ -39,8 +39,8 @@ let userSchema = mongoose.Schema({
   created: { type: Date, default: Date.now },
   updated: { type: Date, default: Date.now },
   superadmin: Boolean,
-  hashedPassword: {type: String},
-  salt: {type: String}
+  hashedPassword: {type: String, select: false},
+  salt: {type: String, select: false}
 });
 
 // PASSWORD MANAGE
@@ -77,9 +77,28 @@ userSchema.methods.isSuperAdmin = function() {
   return this.superadmin === true;
 };
 
+userSchema.methods.getOrgAndRecord = function(organisationId) {
+  return this.orgsAndRecords.find(orgAndRecord => organisationId.equals(getId(orgAndRecord.organisation)));
+};
+
+userSchema.methods.attachOrgAndRecord = function(organisation, record, callback) {
+  var orgAndRecord = this.getOrgAndRecord(organisation._id);
+  if (orgAndRecord && record) {
+    orgAndRecord.record = record;
+  } else if (!orgAndRecord) {
+    this.orgsAndRecords.push({organisation: organisation, record: record});
+  }
+  if (callback) this.save(callback);
+  else return this;
+};
+
 userSchema.statics.findOneByEmail = function (email, callback) {
   email = this.normalizeEmail(email);
   this.findOne({$or: [{'google.normalized':email}, {'email.normalized':email}] }, callback);
+};
+userSchema.statics.findOneByEmailWithPassword  = function (email) {
+  email = this.normalizeEmail(email);
+  return this.findOne({$or: [{'google.normalized':email}, {'email.normalized':email}] }).select('hashedPassword salt');
 };
 
 userSchema.statics.findByGoogleOrCreate = function (profileGoogle){

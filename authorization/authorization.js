@@ -5,7 +5,7 @@ var Organisation = require('../models/organisation');
 /**
  * @description Try to find Organisation by tag provided.
  */
-router.post('/authorization/organisation/:orgTag/:invitationCode?', function(req, res, next) {
+router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
     Organisation.findOne({'tag' : req.params.orgTag})
     .then(organisation => {
         if(!organisation) return res.status(404).json({message: 'Organisation not found.'});
@@ -17,10 +17,10 @@ router.post('/authorization/organisation/:orgTag/:invitationCode?', function(req
 /**
  * @description User can access organisation if one of the three check is passed.
  */
-router.post('/authorization/organisation/:orgTag/:invitationCode?', function(req, res, next) {
+router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
     // when user is invited, he is already registered in the organisation
     if (req.user.belongsToOrganisation(res.locals.organisation._id)) {
-        return res.status(200).json({message: 'User already registered in Organisation.', organisation: res.locals.organisation});
+        return res.status(200).json({message: 'User already registered in Organisation.', organisation: res.locals.organisation, user: req.user});
     }
 
     // User try to access with a code
@@ -46,10 +46,10 @@ router.post('/authorization/organisation/:orgTag/:invitationCode?', function(req
 /**
  * @description Save User with Organisation linked.
  */
-router.post('/authorization/organisation/:orgTag/:invitationCode?', function(req, res, next) {
+router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
     req.user.save()
     .then(() => {
-        return res.status(200).json({message: 'User registered in organisation.', organisation: res.locals.organisation});
+        return res.status(200).json({message: 'User registered in organisation.', organisation: res.locals.organisation, user: req.user});
     }).catch(resWithError);
 });
 
