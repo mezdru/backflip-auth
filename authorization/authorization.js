@@ -2,7 +2,10 @@ var express = require('express');
 var router = express.Router();
 var Organisation = require('../models/organisation');
 
-router.post('/authorization/organisation/:orgTag', function(req, res, next) {
+/**
+ * @description Try to find Organisation by tag provided.
+ */
+router.post('/authorization/organisation/:orgTag/:invitationCode?', function(req, res, next) {
     Organisation.findOne({'tag' : req.params.orgTag})
     .then(organisation => {
         if(!organisation) return res.status(404).json({message: 'Organisation not found.'});
@@ -11,6 +14,9 @@ router.post('/authorization/organisation/:orgTag', function(req, res, next) {
     }).catch(resWithError);
 });
 
+/**
+ * @description User can access organisation if one of the three check is passed.
+ */
 router.post('/authorization/organisation/:orgTag/:invitationCode?', function(req, res, next) {
     // when user is invited, he is already registered in the organisation
     if (req.user.belongsToOrganisation(res.locals.organisation._id)) {
@@ -37,7 +43,10 @@ router.post('/authorization/organisation/:orgTag/:invitationCode?', function(req
     next();
 });  
 
-router.post('/authorization/organisation/:orgTag', function(req, res, next) {
+/**
+ * @description Save User with Organisation linked.
+ */
+router.post('/authorization/organisation/:orgTag/:invitationCode?', function(req, res, next) {
     req.user.save()
     .then(() => {
         return res.status(200).json({message: 'User registered in organisation.', organisation: res.locals.organisation});

@@ -29,7 +29,9 @@ router.post('/register',
     })
 );
 
-// SPECIAL CHECK FOR PASSWORD
+/**
+ * @description Check if password is not dumb.
+ */
 router.post('/register', function(req, res, next){
     var errors = validationResult(req);
     if(dumbPasswords.check(req.body.password)){
@@ -41,7 +43,9 @@ router.post('/register', function(req, res, next){
     next();
 });
 
-// REGISTER NEW USER
+/**
+ * @description Register new user if not already existing
+ */
 router.post('/register', function(req, res, next){
     User.findOneByEmail(req.body.email, function(err, user) {
         if(err) return resWithError(err);
