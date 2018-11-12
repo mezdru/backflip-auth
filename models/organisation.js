@@ -8,7 +8,13 @@ var organisationSchema = mongoose.Schema({
     updated: { type: Date, default: Date.now },
     public: { type: Boolean, default: false },
     premium: { type: Boolean, default: false },
-    canInvite: { type: Boolean, default: true }
+    canInvite: { type: Boolean, default: true },
+    google: {
+        hd: [String],
+    },
+    email: {
+        domains: [String]
+    }
 });
 
 /**
@@ -42,6 +48,17 @@ organisationSchema.virtual('orgsTagsToIds').get(function() {
     orgsTagsToIds.all = this.model('Organisation').getTheAllOrganisationId();
     return orgsTagsToIds;
 });
+
+organisationSchema.methods.isInDomain = function(user) {
+    if(user.email && user.email.value) {
+        let domain = user.email.value.split('@')[1];
+        return this.email.domains.some(currDomain => currDomain === domain);
+    } else if(user.google && user.google.email) {
+        let domain = user.google.email.split('@')[1];
+        return this.google.hd.some(currDomain => currDomain === domain);
+    }
+}
+
 var Organisation = mongoose.model('Organisation', organisationSchema);
 
 module.exports = Organisation;
