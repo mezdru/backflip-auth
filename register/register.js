@@ -25,10 +25,10 @@ sanitizeBody('email').trim().normalizeEmail({
 
 router.post('/',
     body('email').isEmail().withMessage((value, {req}) => {
-        'Please provide a valid Email Address'
+        return 'Please provide a valid Email Address';
     }),
     body('password').isLength({ min: 6}).withMessage((value, {req}) => {
-        return req.__('Your password should have 6 characters min.');
+        return 'Your password should have 6 characters min.';
     })
 );
 
@@ -37,11 +37,14 @@ router.post('/',
  */
 router.post('/', function(req, res, next){
     var errors = validationResult(req);
+    console.log(errors.array());
+    if (!errors.isEmpty()) return res.status(422).json({message: 'Invalid parameters', errors: errors.array()});
+
     if(dumbPasswords.check(req.body.password)){
         const rate = dumbPasswords.rateOfUsage(req.body.password);
-        errors.push({msg: 'Invalid password'});
+        return res.status(422).json({message: 'Invalid password', errors: [{param: 'password', msg: rate.frequency+' per 100.000 Users'}]});
     }
-    if (!errors.isEmpty()) return res.status(422).json({message: 'Invalid parameters', errors: errors});
+    
 
     next();
 });
