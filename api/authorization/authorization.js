@@ -1,11 +1,29 @@
+/**
+ * @api {post} /authorization/organisation/:orgTag/:invitationCode? Register a new User in Organisation
+ * @apiName RegisterUserInOrg
+ * @apiGroup Organisation
+ * @apiVersion 1.0.0
+ * 
+ * @apiHeader {String} Authorization User 'Bearer access_token'
+ * @apiParam {String} orgTag Organisation tag
+ * @apiParam {String} invitationCode Invitation code (optionnal)
+ * 
+ * @apiSuccess {String} message User registered in organisation. OR User already registered in Organisation.
+ * @apiSuccess {User} user User object
+ * @apiSuccess {Organisation} organisation Organisation object
+ * 
+ * @apiError (500 Internal Server Error) InternalError Internal error
+ * @apiError (404 Not Found) OrganisationNotFound Organisation not found.
+ * @apiError (403 Forbidden) InvitationExpired Invitation expired
+ * @apiError (403 Forbidden) UserForbidden User can't access the Organisation.
+ */
+
 var express = require('express');
 var router = express.Router();
-var Organisation = require('../models/organisation');
+var Organisation = require('../../models/organisation');
 
 /**
  * @description Try to find Organisation by tag provided.
- * @param {orgTag} String
- * @param {invitationCode} String - Optionnal
  */
 router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
     Organisation.findOne({'tag' : req.params.orgTag})
@@ -32,7 +50,7 @@ router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
             req.user.addInvitation(res.locals.organisation, res.locals.organisation.codes.find(code => code.value === req.query.code).creator, req.query.code);
             req.user.attachOrgAndRecord(res.locals.organisation, null);
         } else {
-            return res.status(402).json({message: 'Invitation expired'});
+            return res.status(403).json({message: 'Invitation expired'});
         }
     }    
 

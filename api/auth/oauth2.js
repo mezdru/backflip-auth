@@ -1,9 +1,31 @@
+/**
+ * @api {post} /auth/locale Authentify an User
+ * @apiName UserAuthentication
+ * @apiGroup User
+ * @apiVersion 1.0.0
+ * 
+ * @apiHeader {String} username User email
+ * @apiHeader {String} password User password
+ * @apiHeader {String} grant_type Access type, currently 'password'
+ * @apiHeader {String} client_secret Client secret
+ * @apiHeader {String} client_id Client id
+ * 
+ * @apiSuccess {String} access_token Access token of the User
+ * @apiSuccess {String} refresh_token Refresh token of the User
+ * @apiSuccess {String} expires_in Timeout of the access token of the User
+ * @apiSuccess {String} token_type Token type, used for authentication
+ * 
+ * @apiError (500 Internal Server Error) InternalError Internal error
+ * @apiError (403 Forbidden) InvalidGrant Invalid resource owner credentials
+ * @apiError (401 Unauthorized) UnauthorizedClient Client id or secret invalid 
+ */
+
 let oauth2orize             = require('oauth2orize');
 let crypto                  = require('crypto');
 let passport                = require('passport');
-let User                    = require('../models/user');
-let AccessTokenModel        = require('../models/tokenModels').AccessTokenModel;
-let RefreshTokenModel       = require('../models/tokenModels').RefreshTokenModel;
+let User                    = require('../../models/user');
+let AccessTokenModel        = require('../../models/tokenModels').AccessTokenModel;
+let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenModel;
 
 // create OAuth 2.0 server
 let server = oauth2orize.createServer();

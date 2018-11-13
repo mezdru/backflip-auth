@@ -1,15 +1,30 @@
+/**
+ * @api {post} /register Register a new User
+ * @apiName RegisterUser
+ * @apiGroup User
+ * @apiVersion 1.0.0
+ * 
+ * @apiParam {String} email Email of the User
+ * @apiParam {String} password Password of the User
+ * 
+ * @apiSuccess {String} message User created with success.
+ * @apiSuccess {User} user User object
+ * 
+ * @apiError (500 Internal Server Error) InternalError Internal error
+ * @apiError (400 Bad Request) BadRequest Missing parameters OR User exists already
+ * @apiError (422 Invalid Parameters) InvalidParameters Invalid parameters OR Invalid password
+ */
+
 var express = require('express');
 var router = express.Router();
 const { body,validationResult } = require('express-validator/check');
 const { sanitizeBody } = require('express-validator/filter');
 let dumbPasswords = require('dumb-passwords');
-let User = require('../models/user');
+let User = require('../../models/user');
 var md5 = require('md5');
 
 /**
  * @description Checking the parameters
- * @param {email} String
- * @param {password} String
  */
 router.post('/', function(req, res, next){
     if(!req.body.email ||!req.body.password) return res.status(400).json({message: 'Missing parameters'});
