@@ -1,9 +1,9 @@
 let oauth2orize             = require('oauth2orize');
 let crypto                  = require('crypto');
 let passport                = require('passport');
-let User                    = require('../models/user');
-let AccessTokenModel        = require('../models/tokenModels').AccessTokenModel;
-let RefreshTokenModel       = require('../models/tokenModels').RefreshTokenModel;
+let User                    = require('../../models/user');
+let AccessTokenModel        = require('../../models/tokenModels').AccessTokenModel;
+let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenModel;
 
 // create OAuth 2.0 server
 let server = oauth2orize.createServer();

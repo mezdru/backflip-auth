@@ -4,10 +4,10 @@ let BasicStrategy           = require('passport-http').BasicStrategy;
 let ClientPasswordStrategy  = require('passport-oauth2-client-password').Strategy;
 let BearerStrategy          = require('passport-http-bearer').Strategy;
 let GoogleStrategy          = require('passport-google-oauth2').Strategy;
-let User                    = require('../models/user');
-let ClientModel             = require('../models/tokenModels').ClientModel;
-let AccessTokenModel        = require('../models/tokenModels').AccessTokenModel;
-let RefreshTokenModel       = require('../models/tokenModels').RefreshTokenModel;
+let User                    = require('../../models/user');
+let ClientModel             = require('../../models/tokenModels').ClientModel;
+let AccessTokenModel        = require('../../models/tokenModels').AccessTokenModel;
+let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenModel;
 
 // responsible of Client strategy, for client which supports HTTP Basic authentication (required)
 passport.use(new BasicStrategy(
