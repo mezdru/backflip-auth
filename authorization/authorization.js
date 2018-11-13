@@ -1,37 +1,63 @@
 var express = require('express');
 var router = express.Router();
-var User = require('../models/user');
 var Organisation = require('../models/organisation');
-let AccessTokenModel = require('../models/tokenModels').AccessTokenModel;
 
 /**
- * @description Can I access this organisation with this email ?
- *              User can access in the organisation if : he belongs to or is super admin or org is public
- * @returns {200} access granted
- * @returns {400} Bad request or resource not found
- * @returns {403} User and Organisation OK but no access
- * @returns {500} Internal error
+ * @description Try to find Organisation by tag provided.
+ * @param {orgTag} String
+ * @param {invitationCode} String - Optionnal
  */
-router.post('/organisation/:orgTag', function(req, res, next){
-    let user = req.user;
-    if(!req.params.orgTag) return res.status(400).json({isAdminToOrg: false, message: 'Provide valid parameters'});
-
+router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
     Organisation.findOne({'tag' : req.params.orgTag})
     .then(organisation => {
+        if(!organisation) return res.status(404).json({message: 'Organisation not found.'});
+        res.locals.organisation = organisation;
+        return next();
+    }).catch(resWithError);
+});
 
-        if(!organisation) return res.status(400).json({isAdminToOrg: false, message: 'Organisation not found'});
-        let isAdminToOrg = (user.isSuperAdmin() || user.isAdminToOrganisation(organisation._id));
-        if (organisation && organisation.public) return res.status(200).json({isAdminToOrg: isAdminToOrg});
-        if(user.belongsToOrganisationByTag(req.params.orgTag) || user.isSuperAdmin()){
-            return res.status(200).json({isAdminToOrg: isAdminToOrg});
-        }else{
-            return res.status(403).json({isAdminToOrg: false});
+/**
+ * @description User can access organisation if one of the three check is passed.
+ */
+router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
+    
+    // when user is invited, he is already registered in the organisation
+    if (req.user.belongsToOrganisation(res.locals.organisation._id)) {
+        return res.status(200).json({message: 'User already registered in Organisation.', organisation: res.locals.organisation, user: req.user});
+    }
+
+    // User try to access with a code
+    if (req.params.invitationCode) {
+        if (res.locals.organisation.validateCode(req.params.invitationCode)) {
+            req.user.addInvitation(res.locals.organisation, res.locals.organisation.codes.find(code => code.value === req.query.code).creator, req.query.code);
+            req.user.attachOrgAndRecord(res.locals.organisation, null);
+        } else {
+            return res.status(402).json({message: 'Invitation expired'});
         }
+    }    
 
-    }).catch(error => {
-        console.error(error);
-        return res.status(500).json({isAdminToOrg: false, message: 'Internal error'});
-    });
-})
+    // Email domains access
+    if(res.locals.organisation.isInDomain(req.user)) {
+        req.user.attachOrgAndRecord(res.locals.organisation, null);
+    }else{
+        return res.status(403).json({message: 'User can\'t access the Organisation.'});
+    }
+    
+    next();
+});  
+
+/**
+ * @description Save User with Organisation linked.
+ */
+router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
+    req.user.save()
+    .then(() => {
+        return res.status(200).json({message: 'User registered in organisation.', organisation: res.locals.organisation, user: req.user});
+    }).catch(resWithError);
+});
+
+let resWithError = (err) => {
+    return res.status(500).json({message: 'Internal error', errors: [err]});
+};
 
 module.exports = router;

@@ -80,6 +80,10 @@ app.get('/google/login/callback', passport.authenticate('google'), function(req,
   return res.status(200).json(req.user);
 });
 
+// Register
+let register = require('./register/register');
+app.use('/register',register);
+
 // Example of secure API route
 app.get('/test/secure', passport.authenticate('bearer', {session: false}), function(req, res, next){
   res.status(200).json(req.user);
