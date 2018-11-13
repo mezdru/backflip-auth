@@ -45,7 +45,11 @@ let userSchema = mongoose.Schema({
 
 // PASSWORD MANAGE
 userSchema.methods.encryptPassword = function(password){
-  return crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
+  let dateA = new Date();
+  let encodedPass = crypto.pbkdf2Sync(password, this.salt, 100000, 512, 'sha512').toString('hex');
+  let dateB = new Date();
+  console.log( '[ENCRYPT_PASSWORD] - time : ' + (dateB.getTime()-dateA.getTime())/1000 + ' seconds' );
+  return encodedPass;
 }
 
 userSchema.virtual('password')
