@@ -66,6 +66,7 @@ router.post('/', function(req, res, next){
             },
             password: req.body.password
         });
+        
         newUser.email.hash = md5(newUser.email.normalized);
 
         newUser.save()
