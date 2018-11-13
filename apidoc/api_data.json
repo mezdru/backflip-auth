@@ -180,5 +180,118 @@
     },
     "filename": "api/register/register.js",
     "groupTitle": "User"
+  },
+  {
+    "type": "post",
+    "url": "/auth/locale",
+    "title": "Authentify an User",
+    "name": "UserAuthentication",
+    "group": "User",
+    "version": "1.0.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "username",
+            "description": "<p>User email</p>"
+          },
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "password",
+            "description": "<p>User password</p>"
+          },
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "grant_type",
+            "description": "<p>Access type, currently 'password'</p>"
+          },
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "client_secret",
+            "description": "<p>Client secret</p>"
+          },
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "client_id",
+            "description": "<p>Client id</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "access_token",
+            "description": "<p>Access token of the User</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "refresh_token",
+            "description": "<p>Refresh token of the User</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "expires_in",
+            "description": "<p>Timeout of the access token of the User</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "token_type",
+            "description": "<p>Token type, used for authentication</p>"
+          }
+        ]
+      }
+    },
+    "error": {
+      "fields": {
+        "500 Internal Server Error": [
+          {
+            "group": "500 Internal Server Error",
+            "optional": false,
+            "field": "InternalError",
+            "description": "<p>Internal error</p>"
+          }
+        ],
+        "403 Forbidden": [
+          {
+            "group": "403 Forbidden",
+            "optional": false,
+            "field": "InvalidGrant",
+            "description": "<p>Invalid resource owner credentials</p>"
+          }
+        ],
+        "401 Unauthorized": [
+          {
+            "group": "401 Unauthorized",
+            "optional": false,
+            "field": "UnauthorizedClient",
+            "description": "<p>Client id or secret invalid</p>"
+          }
+        ]
+      }
+    },
+    "filename": "api/auth/oauth2.js",
+    "groupTitle": "User"
   }
 ]
