@@ -4,6 +4,8 @@ var Organisation = require('../models/organisation');
 
 /**
  * @description Try to find Organisation by tag provided.
+ * @param {orgTag} String
+ * @param {invitationCode} String - Optionnal
  */
 router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
     Organisation.findOne({'tag' : req.params.orgTag})
@@ -18,6 +20,7 @@ router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
  * @description User can access organisation if one of the three check is passed.
  */
 router.post('/organisation/:orgTag/:invitationCode?', function(req, res, next) {
+    
     // when user is invited, he is already registered in the organisation
     if (req.user.belongsToOrganisation(res.locals.organisation._id)) {
         return res.status(200).json({message: 'User already registered in Organisation.', organisation: res.locals.organisation, user: req.user});
