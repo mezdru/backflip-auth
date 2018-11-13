@@ -61,12 +61,13 @@ router.post('/', function(req, res, next){
         let newUser = new User({
             email: {
                 value: req.body.email,
-                normalized: User.normalizeEmail(newUser.email.value),
-                hash: md5(newUser.email.normalized),
+                normalized: User.normalizeEmail(req.body.email),
                 generated: Date.now(),
             },
             password: req.body.password
         });
+        
+        newUser.email.hash = md5(newUser.email.normalized);
 
         newUser.save()
         .then((userSaved) => {
