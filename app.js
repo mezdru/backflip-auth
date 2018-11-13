@@ -6,6 +6,7 @@ var mongoose = require('mongoose');
 app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -26,25 +27,6 @@ app.use(function(req, res, next) {
     next();
   }
 });
-
-
-
-
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  //intercepts OPTIONS method
-  if ('OPTIONS' === req.method) {
-    //respond with 200
-    res.send(200);
-  }
-  else {
-    next();
-  }
-});
-
-
 
 
 // Database
@@ -70,8 +52,8 @@ if (app.get('env') === 'production') {
 app.use(passport.initialize());
 
 // OAuth2 server
-let oauth2 = require('./auth/oauth2');
-require('./auth/auth');
+let oauth2 = require('./api/auth/oauth2');
+require('./api/auth/auth');
 app.use('/auth/locale', oauth2.token);
 
 // Google OAuth
@@ -81,7 +63,7 @@ app.get('/google/login/callback', passport.authenticate('google'), function(req,
 });
 
 // Register
-let register = require('./register/register');
+let register = require('./api/register/register');
 app.use('/register',register);
 
 // Example of secure API route
@@ -89,7 +71,7 @@ app.get('/test/secure', passport.authenticate('bearer', {session: false}), funct
   res.status(200).json(req.user);
 });
 
-let authorization = require('./authorization/authorization');
+let authorization = require('./api/authorization/authorization');
 app.use('/authorization', passport.authenticate('bearer', {session: false}), authorization);
 
 // catch 404 and forward to error handler
