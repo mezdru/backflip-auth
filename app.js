@@ -8,12 +8,13 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
-
-app.use(function(req, res, next) {
+  // if('POST' === req.method) {
+  //   console.log('post request recieve');
+  //   console.log(req.body);
+  //   console.log(req.headers);
+  //   console.log(req.originalUrl);
+  //   next();
+  // }
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
@@ -21,8 +22,7 @@ app.use(function(req, res, next) {
   if ('OPTIONS' === req.method) {
     //respond with 200
     res.send(200);
-  }
-  else {
+  } else {
   //move on
     next();
   }
