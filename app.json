@@ -1,0 +1,50 @@
+{
+  "name": "backflip-auth",
+  "scripts": {
+  },
+  "env": {
+    "DEFAULT_CLIENT_ID": {
+      "required": true
+    },
+    "DEFAULT_CLIENT_SECRET": {
+      "required": true
+    },
+    "DEFAULT_TOKEN_TIMEOUT": {
+      "required": true
+    },
+    "GOOGLE_CLIENT_ID": {
+      "required": true
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "required": true
+    },
+    "GOOGLE_REDIRECT_URI": {
+      "required": true
+    },
+    "HOST": {
+      "required": true
+    },
+    "MONGODB_URI": {
+      "required": true
+    },
+    "NODE_ENV": {
+      "required": true
+    },
+    "PAPERTRAIL_API_TOKEN": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+    "papertrail"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
