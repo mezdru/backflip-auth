@@ -8,20 +8,13 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 app.use(function(req, res, next) {
-  // if('POST' === req.method) {
-  //   console.log('post request recieve');
-  //   console.log(req.body);
-  //   console.log(req.headers);
-  //   console.log(req.originalUrl);
-  //   next();
-  // }
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   //intercepts OPTIONS method
   if ('OPTIONS' === req.method) {
     //respond with 200
-    res.send(200);
+    res.sendStatus(200);
   } else {
   //move on
     next();
@@ -71,8 +64,8 @@ app.get('/test/secure', passport.authenticate('bearer', {session: false}), funct
   res.status(200).json(req.user);
 });
 
-let authorization = require('./api/authorization/authorization');
-app.use('/authorization', passport.authenticate('bearer', {session: false}), authorization);
+let registerToOrg = require('./api/registerToOrg/registerToOrg');
+app.use('/register/organisation', passport.authenticate('bearer', {session: false}), registerToOrg);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
