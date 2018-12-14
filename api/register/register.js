@@ -91,12 +91,17 @@ router.post('/', function(req, res, next){
             userSaved.hashedPassword = undefined;
             userSaved.salt = undefined;
             return res.status(200).json({message: 'User created with success.', user: userSaved});
-        }).catch(resWithError);
+        }).catch((err)=>{return next(err);});
     });
 });
 
 let resWithError = (err) => {
     return res.status(500).json({message: 'Internal error', errors: [err]});
 };
+
+router.use(function(err, req, res, next){
+    if(err) return res.status(500).json({message: 'Internal error', errors: [err.message]});
+    return res.status(500).json({message: 'Unexpected error'});
+});
 
 module.exports = router;
