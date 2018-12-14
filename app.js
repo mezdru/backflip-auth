@@ -67,6 +67,9 @@ app.get('/test/secure', passport.authenticate('bearer', {session: false}), funct
 let registerToOrg = require('./api/registerToOrg/registerToOrg');
 app.use('/register/organisation', passport.authenticate('bearer', {session: false}), registerToOrg);
 
+let passwordReset = require('./api/password/password');
+app.use('/password/reset', passwordReset);
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
