@@ -47,11 +47,11 @@ app.use(passport.initialize());
 // OAuth2 server
 let oauth2 = require('./api/auth/oauth2');
 require('./api/auth/auth');
-app.use('/auth/locale', oauth2.token);
+app.use('/locale', oauth2.token);
 
 // Google OAuth
-app.get('/auth/google', passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email']}));
-app.get('/google/login/callback', passport.authenticate('google'), function(req, res, next){
+app.get('/google', passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email']}));
+app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
   return res.status(200).json(req.user);
 });
 
@@ -60,7 +60,7 @@ let register = require('./api/register/register');
 app.use('/register',register);
 
 // Example of secure API route
-app.get('/test/secure', passport.authenticate('bearer', {session: false}), function(req, res, next){
+app.get('/isAuth', passport.authenticate('bearer', {session: false}), function(req, res, next){
   res.status(200).json(req.user);
 });
 
