@@ -63,6 +63,7 @@ router.post('/:token/:hash', function(req, res, next){
         if( !(user.email.generated > Date.now() - 24*30*3600*1000) ) return res.status(403).send({message: 'Token expired'});
 
         user.password = req.body.password;
+        user.email.validated = true;
 
         User.updateOne({_id: user._id}, {$set: user}, {new: true})
         .then(result => {
