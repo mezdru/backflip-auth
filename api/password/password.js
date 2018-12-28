@@ -64,9 +64,9 @@ router.post('/:token/:hash', function(req, res, next){
 
         user.password = req.body.password;
 
-        User.updateOne({_id: user._id}, {$set: user})
-        .then(results => {
-            if(results) return res.status(200).send({message: 'Password updated with success'});
+        User.updateOne({_id: user._id}, {$set: user}, {new: true})
+        .then(result => {
+            if(result) return res.status(200).send({message: 'Password updated with success', email: user.email.value});
             return next(true);
         }).catch((err)=>{return next(err);});
     }).catch((err)=>{return next(err);});
