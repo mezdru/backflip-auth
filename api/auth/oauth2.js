@@ -51,13 +51,22 @@ let generateTokens = function(userId, clientId, done){
 // This is in case of Login, we should call this after user is created for a person
 server.exchange(oauth2orize.exchange.password(function(client, email, password, scope, done) {    
     User.findOneByEmailWithPassword(email).then(user => {
-        if (!user) { return done(null, false); }
+        if (!user) { 
+            error = new Error('User does not exists.');
+            error.status = 404;
+            return done(error, false);
+        }
 
         try{
-            if (!user.checkPassword(password)) { return done(null, false); }
-        }catch(error){
+            if (!user.checkPassword(password)) {
+                error = new Error('Wrong password.');
+                error.status = 403;
+                return done(error, false); 
+            }
+        }catch(err){
+            error = new Error('User has no password.');
             error.status = 403;
-            return done(null, false);
+            return done(error, false);
         }
 
         RefreshTokenModel.remove({ userId: user._id, clientId: client.clientId }, function (err) {
