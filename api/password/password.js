@@ -46,7 +46,7 @@ router.post('/:token/:hash', function(req, res, next){
 
     if(dumbPasswords.check(req.body.password)){
         const rate = dumbPasswords.rateOfUsage(req.body.password);
-        return res.status(422).json({message: 'Invalid password', errors: [{param: 'password', msg: 'This password is used by '+rate.frequency+' per 100.000 Users, please choose a better one.'}]});
+        return res.status(422).json({message: 'Invalid password', errors: [{param: 'password', msg: rate.frequency, type: 'dumb'}]});
     }
     
     next();
