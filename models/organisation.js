@@ -12,6 +12,15 @@ var organisationSchema = mongoose.Schema({
     google: {
         hd: [String],
     },
+    codes: [
+        {
+          _id: false,
+          value: String,
+          creator: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
+          starts: { type: Date, default: Date.now },
+          ends: { type: Date, default: Date.now }
+        }
+      ],
     email: {
         domains: [String]
     }
@@ -48,6 +57,14 @@ organisationSchema.virtual('orgsTagsToIds').get(function() {
     orgsTagsToIds.all = this.model('Organisation').getTheAllOrganisationId();
     return orgsTagsToIds;
 });
+
+organisationSchema.methods.validateCode = function(codeToValidate) {
+    return this.codes.some(code => {
+      return codeToValidate == code.value &&
+      code.starts.getTime() < Date.now() &&
+      code.ends.getTime() > Date.now();
+    });
+  };  
 
 organisationSchema.methods.isInDomain = function(user) {
     if(user.email && user.email.value) {

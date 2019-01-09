@@ -34,6 +34,15 @@ let userSchema = mongoose.Schema({
     generated: Date,
     validated: Boolean
   },
+  invitations: [
+    {
+      _id: false,
+      organisation: {type: mongoose.Schema.Types.ObjectId, ref: 'Organisation', default: null},
+      user: {type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null},
+      code: String,
+      created: { type: Date, default: Date.now }
+    }
+  ],
   last_login: { type: Date },
   last_action: {type: Date},
   created: { type: Date, default: Date.now },
@@ -79,6 +88,17 @@ userSchema.methods.isAdminToOrganisation = function(organisationId) {
 
 userSchema.methods.isSuperAdmin = function() {
   return this.superadmin === true;
+};
+
+userSchema.methods.addInvitation = function(organisation, user, code, callback) {
+  var invitation = {
+    organisation: organisation,
+    user: user,
+    code: code,
+    created: Date.now(),
+  };
+  this.invitations.push(invitation);
+  if(callback) return this.save(callback);
 };
 
 userSchema.methods.getOrgAndRecord = function(organisationId) {
