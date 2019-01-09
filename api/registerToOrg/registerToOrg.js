@@ -47,7 +47,7 @@ router.post('/:orgId/:invitationCode?', function(req, res, next) {
     // User try to access with a code
     if (req.params.invitationCode) {
         if (res.locals.organisation.validateCode(req.params.invitationCode)) {
-            req.user.addInvitation(res.locals.organisation, res.locals.organisation.codes.find(code => code.value === req.query.code).creator, req.query.code);
+            req.user.addInvitation(res.locals.organisation, res.locals.organisation.codes.find(code => code.value === req.params.invitationCode).creator, req.params.invitationCode);
             req.user.attachOrgAndRecord(res.locals.organisation, null);
         } else {
             return res.status(403).json({message: 'Invitation expired'});
