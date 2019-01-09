@@ -37,8 +37,7 @@ router.post('/:orgId/:invitationCode?', function(req, res, next) {
 /**
  * @description User can access organisation if one of the three check is passed.
  */
-router.post('/:orgId/:invitationCode?', function(req, res, next) {
-    
+router.post('/:orgId/:invitationCode?', function(req, res, next) {    
     // when user is invited, he is already registered in the organisation
     if (req.user.belongsToOrganisation(res.locals.organisation._id)) {
         return res.status(200).json({message: 'User already registered in Organisation.', organisation: res.locals.organisation, user: req.user});
@@ -52,15 +51,14 @@ router.post('/:orgId/:invitationCode?', function(req, res, next) {
         } else {
             return res.status(403).json({message: 'Invitation expired'});
         }
-    }    
-
-    // Email domains access
-    if(res.locals.organisation.isInDomain(req.user) || req.user.isSuperAdmin()) {
-        req.user.attachOrgAndRecord(res.locals.organisation, null);
     }else{
-        return res.status(403).json({message: 'User can\'t access the Organisation.'});
+        // Email domains access
+        if(res.locals.organisation.isInDomain(req.user) || req.user.isSuperAdmin()) {
+            req.user.attachOrgAndRecord(res.locals.organisation, null);
+        }else{
+            return res.status(403).json({message: 'User can\'t access the Organisation.'});
+        }
     }
-    
     next();
 });  
 
