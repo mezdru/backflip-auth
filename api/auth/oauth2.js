@@ -69,9 +69,6 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
                 return done(error, false); 
             }
         }catch(err){
-            console.log('---- error user has no password ----');
-            console.log(err);
-            console.log('---- end error ----');
             error = new Error('User has no password.');
             error.status = 403;
             return done(error, false);
