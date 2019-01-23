@@ -46,7 +46,8 @@ if (app.get('env') === 'production') {
 app.use(passport.initialize());
 
 app.get('/redirect', (req, res, next) => {
-  return res.redirect('https://'+ process.env.HOST_FRONTFLIP + '/signin/google/callback?access_token='+req.query.access_token+'&refresh_token='+req.query.refresh_token);
+  let state = JSON.parse(req.query.state);
+  return res.redirect('https://'+ process.env.HOST_FRONTFLIP + (state.orgTag ? '/' + state.orgTag : '') + '/signin/google/callback?access_token='+req.query.access_token+'&refresh_token='+req.query.refresh_token+'&state='+req.query.state);
 });
 
 // OAuth2 server
@@ -55,9 +56,11 @@ require('./api/auth/auth');
 app.use('/locale', oauth2.token);
 
 // Google OAuth
-app.get('/google', passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email']}));
+app.get('/google', (req, res, next) => {
+  return passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email'], state: req.query.state})(req, res);
+});
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
-  res.redirect('/redirect?access_token='+req.user.access_token+'&refresh_token='+req.user.refresh_token);
+  res.redirect('/redirect?access_token='+req.user.access_token+'&refresh_token='+req.user.refresh_token+'&state='+req.query.state);
 });
 
 // Register
