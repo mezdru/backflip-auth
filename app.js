@@ -41,11 +41,12 @@ if (app.get('env') === 'production') {
   });
 }
 
+
 // Init passport
 app.use(passport.initialize());
 
 app.get('/redirect', (req, res, next) => {
-  return res.redirect('https://'+ process.env.HOST_FRONTFLIP + 'signin/google/callback?access_token='+req.query.access_token+'&refresh_token='+req.query.refresh_token);
+  return res.redirect('https://'+ process.env.HOST_FRONTFLIP + '/signin/google/callback?access_token='+req.query.access_token+'&refresh_token='+req.query.refresh_token);
 });
 
 // OAuth2 server
