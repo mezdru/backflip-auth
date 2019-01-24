@@ -122,7 +122,7 @@ userSchema.statics.findOneByEmail = function (email, callback) {
 };
 userSchema.statics.findOneByEmailWithPassword  = function (email) {
   email = this.normalizeEmail(email);
-  return this.findOne({$or: [{'google.normalized':email}, {'email.normalized':email}] }).select('hashedPassword salt');
+  return this.findOne({$or: [{'google.normalized':email}, {'email.normalized':email}] }).select('hashedPassword salt google email');
 };
 
 userSchema.statics.findByGoogleOrCreate = function (profileGoogle, idToken, refreshToken){
