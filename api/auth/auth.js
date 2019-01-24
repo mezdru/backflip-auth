@@ -8,6 +8,8 @@ let User                    = require('../../models/user');
 let ClientModel             = require('../../models/tokenModels').ClientModel;
 let AccessTokenModel        = require('../../models/tokenModels').AccessTokenModel;
 let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenModel;
+let crypto                  = require('crypto');
+
 
 // responsible of Client strategy, for client which supports HTTP Basic authentication (required)
 passport.use(new BasicStrategy(
@@ -80,14 +82,16 @@ passport.use(new GoogleStrategy({
             if (client.clientSecret != process.env.DEFAULT_CLIENT_SECRET) { return done(null, false); }
 
             // find user or create by googleId
-            User.findByGoogleOrCreate(profile)
+            User.findByGoogleOrCreate(profile, token, refreshToken)
             .then((user)=>{
                 let tokenModel = {userId: user._id, clientId: client.clientId};
+                let tokenValue = crypto.randomBytes(32).toString('hex');
+                let refreshTokenValue = crypto.randomBytes(32).toString('hex');
 
                 // RefreshToken is not always sent by google
                 if(refreshToken){
                     RefreshTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
-                    tokenModel.token = refreshToken;
+                    tokenModel.token = refreshTokenValue;
                     (new RefreshTokenModel(tokenModel)).save(function(err){
                         if(err) return done(err);
                     });
@@ -95,13 +99,13 @@ passport.use(new GoogleStrategy({
 
                 // AccessToken handle
                 AccessTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
-                tokenModel.token = token;
+                tokenModel.token = tokenValue;
                 (new AccessTokenModel(tokenModel)).save(function(err){
                     if(err) return done(err);
                 });
                 
 
-                return done(null, token, refreshToken, user);
+                return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue});
             }).catch((error)=>{
                 return done(error);
             });

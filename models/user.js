@@ -125,15 +125,19 @@ userSchema.statics.findOneByEmailWithPassword  = function (email) {
   return this.findOne({$or: [{'google.normalized':email}, {'email.normalized':email}] }).select('hashedPassword salt');
 };
 
-userSchema.statics.findByGoogleOrCreate = function (profileGoogle){
+userSchema.statics.findByGoogleOrCreate = function (profileGoogle, idToken, refreshToken){
   return User.findOne({'google.id': profileGoogle.id}).then((user)=>{
     if(user) return user;
+    let tokens = {id_token: idToken};
+    if(refreshToken) token.refresh_token = refreshToken;
+
     return (new User({google: 
       {
         id : profileGoogle.id, 
         email: profileGoogle.email, 
         hd: profileGoogle._json.domain,
-        normalized: this.normalizeEmail(profileGoogle.email)
+        normalized: this.normalizeEmail(profileGoogle.email),
+        tokens: tokens
       }})).save();
   });
 }
