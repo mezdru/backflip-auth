@@ -56,6 +56,11 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
             error.status = 404;
             return done(error, false);
         }
+        if(!user.email || !user.email.value) {
+            error = new Error('User use Google Auth.');
+            error.status = 403;
+            return done(error, false);
+        }
 
         try{
             if (!user.checkPassword(password)) {
