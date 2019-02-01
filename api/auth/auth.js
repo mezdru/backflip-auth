@@ -88,14 +88,11 @@ passport.use(new GoogleStrategy({
                 let tokenValue = crypto.randomBytes(32).toString('hex');
                 let refreshTokenValue = crypto.randomBytes(32).toString('hex');
 
-                // RefreshToken is not always sent by google
-                if(refreshToken){
-                    RefreshTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
-                    tokenModel.token = refreshTokenValue;
-                    (new RefreshTokenModel(tokenModel)).save(function(err){
-                        if(err) return done(err);
-                    });
-                }
+                RefreshTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
+                tokenModel.token = refreshTokenValue;
+                (new RefreshTokenModel(tokenModel)).save(function(err){
+                    if(err) return done(err);
+                });
 
                 // AccessToken handle
                 AccessTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
