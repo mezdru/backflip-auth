@@ -102,7 +102,7 @@ passport.use(new GoogleStrategy({
                 });
                 
 
-                return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue});
+                return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue, _id: user._id});
             }).catch((error)=>{
                 return done(error);
             });

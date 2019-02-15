@@ -49,7 +49,11 @@ let userSchema = mongoose.Schema({
   updated: { type: Date, default: Date.now },
   superadmin: Boolean,
   hashedPassword: {type: String, select: false},
-  salt: {type: String, select: false}
+  salt: {type: String, select: false},
+  temporaryToken: {
+    value: String, 
+    generated: Date
+  }
 });
 
 // PASSWORD MANAGE

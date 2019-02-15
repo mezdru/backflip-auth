@@ -48,20 +48,48 @@ app.use(passport.initialize());
 app.get('/redirect', (req, res, next) => {
   let state = (req.query.state ? JSON.parse(req.query.state) : null);
   return res.redirect('https://'+ process.env.HOST_FRONTFLIP + ( (state && state.orgTag) ? '/' + state.orgTag : '') + 
-                      '/signin/google/callback?access_token='+req.query.access_token+'&refresh_token='+req.query.refresh_token+((req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
+                      '/signin/google/callback?token='+req.query.token+((req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
 });
+
+let User = require('./models/user');
 
 // OAuth2 server
 let oauth2 = require('./api/auth/oauth2');
 require('./api/auth/auth');
+
+// Exchange temporary token to access and refresh tokens
+app.post('/locale/exchange', (res, req, next) => {
+
+  // SHOULD CHECK CLIENT ID AND SECRET TOO
+
+  User.findOne({'temporaryToken.value': req.body.token})
+  .then(user => {
+    if(!user) return res.status(404).json({message: 'Token not valid'});
+    
+    // GET USER SESSION (POPULATED) BY USER ID AND SEND access_token and refresh_token
+
+  }).catch(err => {
+    return res.status(500).json({message: 'Internal error', error: err});
+  });
+});
+
 app.use('/locale', oauth2.token);
 
 // Google OAuth
 app.get('/google', (req, res, next) => {
   return passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email'], state: req.query.state})(req, res);
 });
+
+let crypto = require('crypto');
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
-  res.redirect('/redirect?access_token='+req.user.access_token+'&refresh_token='+req.user.refresh_token+( (req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
+  User.findById(req.user._id)
+  .then((user) => {
+    let temporaryToken = crypto.randomBytes(32).toString('hex');
+    user.temporaryToken = { value: temporaryToken, generated: Date.now()};
+    user.save().then(() => {
+      return res.redirect('/redirect?token='+temporaryToken+( (req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
+    })
+  })
 });
 
 // Register
