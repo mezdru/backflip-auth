@@ -103,7 +103,7 @@ server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken,
         userSession.updateAccessToken(aToken, authInfo.req.headers['user-agent'])
         .then(() => {
           AccessTokenModel.deleteOne({'_id': oldAccessTokenId}).exec();
-          return done(null, aToken.token, refreshToken, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT});
+          return done(null, aToken.token, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT});
         }).catch(err => done(err));
       }).catch(err => done(err));
     }).catch(err => done(err));
