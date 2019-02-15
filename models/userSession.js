@@ -13,7 +13,6 @@ var UserSessionSchema = mongoose.Schema({
 });
 
 UserSessionSchema.statics.findByAccessTokenAndUserAgent = function(aTokenId, uAgent) {
-  console.log(aTokenId);
   return this.findOne({userAgent: uAgent, accessToken: mongoose.Types.ObjectId(aTokenId)}).exec();
 }
 

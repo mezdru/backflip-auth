@@ -62,15 +62,6 @@ let generateTokens = function(userId, clientId, request, done){
     }).catch((err) => {
       return done(err);
     });
-    // (new RefreshTokenModel(model)).save(function(err){
-    //     if(err) return done(err);
-    // });
-
-    // model.token = tokenValue;
-    // (new AccessTokenModel(model)).save(function(err){
-    //     if(err) return done(err);
-    //     done(null, tokenValue, refreshTokenValue, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT});
-    // });
 }
 
 // Exchange username & password for an access token.
@@ -115,8 +106,10 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
 
 // Exchange refreshToken for an access token.
 server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken, scope, body, authInfo, done) {
-  
-    UserSession.findByRefreshTokenAndUserAgent(refreshToken, authInfo.req.headers['user-agent'])
+
+  RefreshTokenModel.findOne({ token: refreshToken })
+  .then(refreshTokenObject => {
+    UserSession.findByRefreshTokenAndUserAgent(refreshTokenObject._id, authInfo.req.headers['user-agent'])
     .then(userSession => {
       // create new accessToken 
       (new AccessTokenModel({userId: userSession.user, clientId: client.clientId, token: crypto.randomBytes(32).toString('hex')})).save()
@@ -128,25 +121,8 @@ server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken,
         }).catch(err => done(err));
       }).catch(err => done(err));
     }).catch(err => done(err));
+  }).catch(err => done(err));
 
-    // RefreshTokenModel.findOne({ token: refreshToken }, function(err, token) {
-    //     if (err) { return done(err); }
-    //     if (!token) { return done(null, false); }
-
-    //     User.findById(token.userId, function(err, user) {
-    //         if (err) { return done(err); }
-    //         if (!user) { return done(null, false); }
-
-    //         RefreshTokenModel.remove({ userId: user._id, clientId: client.clientId }, function (err) {
-    //             if (err) return done(err);
-    //         });
-    //         AccessTokenModel.remove({ userId: user._id, clientId: client.clientId }, function (err) {
-    //             if (err) return done(err);
-    //         });
-
-    //         return generateTokens(user._id, client.clientId, null, done);
-    //     });
-    // });
 }));
 
 // token endpoint

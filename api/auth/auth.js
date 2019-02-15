@@ -68,52 +68,6 @@ passport.use(new BearerStrategy({ passReqToCallback: true }, function(req, acces
 
     }).catch(err => done(err));
   }).catch(err => done(err));
-
-  // UserSession.findByAccessTokenAndUserAgent(accessToken, req.headers['user-agent'])
-  // .then(userSession => {
-  //   if(!userSession) return done(null, false);
-  //   console.log(userSession);
-  //   console.log(accessToken);
-  //   console.log(req.headers['user-agent']);
-
-  //   // token expired
-  //   if(Math.round((Date.now()-userSession.accessToken.created)/1000) > process.env.DEFAULT_TOKEN_TIMEOUT){
-  //     AccessTokenModel.remove({token: userSession.accessToken.token}, function(err){
-  //         if(err) return done(err);
-  //     });
-  //     return done(null, false, {message: 'Token expired'});
-  //   }
-
-  //   // token not expired
-  //   User.findById(userSession.user, function(err, user){
-  //     if(err) return done(err);
-  //     if(!user) return done(null, false, {message: 'Unknown user'});
-  //     var info = {scope: '*'};
-  //     done(null, user, info);
-  //   });
-
-  // }).catch(err => done(err));
-
-        // AccessTokenModel.findOne({token: accessToken}, function(err, token){
-        //     if (err) return done(err);
-        //     if (!token) return done(null, false);
-
-        //     // token expired 
-        //     if(Math.round((Date.now()-token.created)/1000) > process.env.DEFAULT_TOKEN_TIMEOUT){
-        //         AccessTokenModel.remove({token: accessToken}, function(err){
-        //             if(err) return done(err);
-        //         });
-        //         return done(null, false, {message: 'Token expired'});
-        //     }
-
-        //     // token not expired
-        //     User.findById(token.userId, function(err, user){
-        //         if(err) return done(err);
-        //         if(!user) return done(null, false, {message: 'Unknown user'});
-        //         var info = {scope: '*'};
-        //         done(null, user, info);
-        //     });
-        // });
 }));
 
 passport.serializeUser(function(user, done) {
