@@ -64,44 +64,28 @@ let generateTokens = function(userId, clientId, request, done){
     });
 }
 
+let getError = (message, code) => {
+  let error = new Error(message);
+  error.status = code;
+  return error;
+}
+
 // Exchange username & password for an access token.
 // This is in case of Login, we should call this after user is created for a person
 server.exchange(oauth2orize.exchange.password(function(client, email, password, scope, body, authInfo, done) {    
-    User.findOneByEmailWithPassword(email).then(user => {
-        if (!user) { 
-            error = new Error('User does not exists.');
-            error.status = 404;
-            return done(error, false);
-        }
-        if(!user.email || !user.email.value) {
-            error = new Error('User use Google Auth.');
-            error.status = 403;
-            return done(error, false);
-        }
+    User.findOneByEmailWithPassword(email)
+    .then(user => {
+        if (!user) return done(getError('User does not exists.', 404), false);
+        if(!user.email || !user.email.value) return done(getError('User use Google Auth.', 403), false);
 
         try{
-            if (!user.checkPassword(password)) {
-                error = new Error('Wrong password.');
-                error.status = 403;
-                return done(error, false); 
-            }
+            if (!user.checkPassword(password)) return done(getError('Wrong password', 403), false); 
         }catch(err){
-            error = new Error('User has no password.');
-            error.status = 403;
-            return done(error, false);
+            return done(getError('User has no password.', 403), false);
         }
 
-        RefreshTokenModel.remove({ userId: user._id, clientId: client.clientId }, function (err) {
-            if (err) return done(err);
-        });
-        AccessTokenModel.remove({ userId: user._id, clientId: client.clientId }, function (err) {
-            if (err) return done(err);
-        });
-
         return generateTokens(user._id, client.clientId, authInfo.req, done);
-    }).catch(err => {
-        return done(err);
-    });
+    }).catch(err =>  done(err));
 }));
 
 // Exchange refreshToken for an access token.
@@ -109,14 +93,16 @@ server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken,
 
   RefreshTokenModel.findOne({ token: refreshToken })
   .then(refreshTokenObject => {
-    UserSession.findByRefreshTokenAndUserAgent(refreshTokenObject._id, authInfo.req.headers['user-agent'])
+    UserSession.findByRefreshToken(refreshTokenObject._id)
     .then(userSession => {
+      let oldAccessTokenId = userSession.accessToken;
       // create new accessToken 
       (new AccessTokenModel({userId: userSession.user, clientId: client.clientId, token: crypto.randomBytes(32).toString('hex')})).save()
       .then(aToken => {
         // save new accessToken in session
-        userSession.updateAccessToken(aToken)
+        userSession.updateAccessToken(aToken, authInfo.req.headers['user-agent'])
         .then(() => {
+          AccessTokenModel.deleteOne({'_id': oldAccessTokenId}).exec();
           return done(null, aToken.token, refreshToken, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT});
         }).catch(err => done(err));
       }).catch(err => done(err));

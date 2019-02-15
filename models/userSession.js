@@ -12,16 +12,17 @@ var UserSessionSchema = mongoose.Schema({
   updated: { type: Date, default: Date.now }
 });
 
-UserSessionSchema.statics.findByAccessTokenAndUserAgent = function(aTokenId, uAgent) {
-  return this.findOne({userAgent: uAgent, accessToken: mongoose.Types.ObjectId(aTokenId)}).exec();
+UserSessionSchema.statics.findByAccessToken = function(aTokenId) {
+  return this.findOne({accessToken: mongoose.Types.ObjectId(aTokenId)}).exec();
 }
 
-UserSessionSchema.statics.findByRefreshTokenAndUserAgent = function(rTokenId, uAgent) {
-  return this.findOne({refreshToken: mongoose.Types.ObjectId(rTokenId), userAgent: uAgent}).exec();
+UserSessionSchema.statics.findByRefreshToken = function(rTokenId) {
+  return this.findOne({refreshToken: mongoose.Types.ObjectId(rTokenId)}).exec();
 }
 
-UserSessionSchema.methods.updateAccessToken = function(aTokenId) {
+UserSessionSchema.methods.updateAccessToken = function(aTokenId, uAgent) {
   this.accessToken = aTokenId;
+  this.userAgent = uAgent;
   return this.save();
 }
 

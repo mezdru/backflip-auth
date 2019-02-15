@@ -11,6 +11,38 @@ let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenMo
 let UserSession             = require('../../models/userSession'); 
 let crypto                  = require('crypto');
 
+let generateTokens = function(userId, clientId, request, done){
+  let model = {userId: userId, clientId: clientId};
+  let tokenValue = crypto.randomBytes(32).toString('hex');
+  let refreshTokenValue = crypto.randomBytes(32).toString('hex');
+
+  model.token = refreshTokenValue;
+  (new RefreshTokenModel(model)).save()
+  .then((refreshToken) => {
+    model.token = tokenValue;
+    (new AccessTokenModel(model)).save()
+    .then((accessToken) => {
+      let userSession = {
+        accessToken: accessToken._id,
+        refreshToken: refreshToken._id,
+        clientId: clientId,
+        user: userId,
+        userAgent: request.headers['user-agent'],
+        userIP: request.headers['x-forwarded-for'] || request.connection.remoteAddress
+      };
+      (new UserSession(userSession)).save()
+      .then(() => {
+        return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue});
+      }).catch((err) => {
+        return done(err);
+      });
+    }).catch((err) => {
+      return done(err);
+    });
+  }).catch((err) => {
+    return done(err);
+  });
+}
 
 // responsible of Client strategy, for client which supports HTTP Basic authentication (required)
 passport.use(new BasicStrategy(
@@ -43,12 +75,10 @@ passport.use(new BearerStrategy({ passReqToCallback: true }, function(req, acces
   AccessTokenModel.findOne({token: accessToken})
   .then(accessTokenObject => {
     if (!accessTokenObject) return done(null, false);
-    console.log('accessTokenObject : ' + JSON.stringify(accessTokenObject))
 
-    UserSession.findByAccessTokenAndUserAgent(accessTokenObject._id, req.headers['user-agent'])
+    UserSession.findByAccessToken(accessTokenObject._id)
     .then(userSession => {
       if(!userSession) return done(null, false);
-      console.log('user session : ' + JSON.stringify(userSession));
   
       // token expired
       if(Math.round((Date.now()-userSession.accessToken.created)/1000) > process.env.DEFAULT_TOKEN_TIMEOUT){
@@ -94,25 +124,7 @@ passport.use(new GoogleStrategy({
             // find user or create by googleId
             User.findByGoogleOrCreate(profile, token, refreshToken)
             .then((user)=>{
-                let tokenModel = {userId: user._id, clientId: client.clientId};
-                let tokenValue = crypto.randomBytes(32).toString('hex');
-                let refreshTokenValue = crypto.randomBytes(32).toString('hex');
-
-                RefreshTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
-                tokenModel.token = refreshTokenValue;
-                (new RefreshTokenModel(tokenModel)).save(function(err){
-                    if(err) return done(err);
-                });
-
-                // AccessToken handle
-                AccessTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
-                tokenModel.token = tokenValue;
-                (new AccessTokenModel(tokenModel)).save(function(err){
-                    if(err) return done(err);
-                });
-                
-
-                return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue});
+              return generateTokens(user._id, client.clientId, req, done);
             }).catch((error)=>{
                 return done(error);
             });
