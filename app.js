@@ -3,6 +3,10 @@ var express = require('express');
 var app = express();
 let passport = require('passport');
 var mongoose = require('mongoose');
+let User = require('./models/user');
+let UserSession = require('./models/userSession');
+let ClientModel = require('./models/tokenModels').ClientModel;
+
 app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -47,21 +51,50 @@ app.use(passport.initialize());
 
 app.get('/redirect', (req, res, next) => {
   let state = (req.query.state ? JSON.parse(req.query.state) : null);
-  return res.redirect('https://'+ process.env.HOST_FRONTFLIP + ( (state && state.orgTag) ? '/' + state.orgTag : '') + 
-                      '/signin/google/callback?access_token='+req.query.access_token+'&refresh_token='+req.query.refresh_token+((req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
+  return res.redirect((process.env.NODE_ENV === 'development' ? 'http://' : 'https://')+ 
+                      process.env.HOST_FRONTFLIP + 
+                      ( (state && state.orgTag) ? '/' + state.orgTag : '') + 
+                      '/signin/google/callback?token='+req.query.token+
+                      ((req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
 });
 
 // OAuth2 server
 let oauth2 = require('./api/auth/oauth2');
 require('./api/auth/auth');
+
+// Exchange temporary token to access and refresh tokens
+//@todo use passport strategy to handle that
+app.post('/locale/exchange', (req, res, next) => {
+
+  ClientModel.findOne({ clientId: req.body.client_id }, function(err, client) {
+    if (err) return res.status(500).json({message: 'Internal error', error: err});
+    if (!client) return res.status(403).json({message: 'Unauthorized'});
+    if (client.clientSecret != req.body.client_secret) return res.status(403).json({message: 'Unauthorized'});
+    
+    User.findByTemporaryToken(req.body.token)
+    .then(user => {
+      if(!user) return res.status(404).json({message: 'Token not valid'});
+      UserSession.findPopulatedObject(user.temporaryToken.userSession)
+      .then(uSession => {
+        return res.status(200).json({access_token: uSession.accessToken.token, refresh_token: uSession.refreshToken.token});
+      }).catch(err => res.status(500).json({message: 'Internal error', error: err}));
+    }).catch(err => res.status(500).json({message: 'Internal error', error: err}));
+  });
+
+});
+
 app.use('/locale', oauth2.token);
 
 // Google OAuth
 app.get('/google', (req, res, next) => {
   return passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email'], state: req.query.state})(req, res);
 });
+
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
-  res.redirect('/redirect?access_token='+req.user.access_token+'&refresh_token='+req.user.refresh_token+( (req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
+  User.findById(req.user.userId)
+  .then((user) => {
+      return res.redirect('/redirect?token='+user.temporaryToken.value+( (req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
+  });
 });
 
 // Register

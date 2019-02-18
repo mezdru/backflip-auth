@@ -49,7 +49,12 @@ let userSchema = mongoose.Schema({
   updated: { type: Date, default: Date.now },
   superadmin: Boolean,
   hashedPassword: {type: String, select: false},
-  salt: {type: String, select: false}
+  salt: {type: String, select: false},
+  temporaryToken: {
+    value: String, 
+    generated: Date,
+    userSession: {type: mongoose.Schema.Types.ObjectId, ref: 'UserSession', default: null}
+  }
 });
 
 // PASSWORD MANAGE
@@ -114,6 +119,11 @@ userSchema.methods.attachOrgAndRecord = function(organisation, record, callback)
   }
   if (callback) this.save(callback);
   else return this;
+};
+
+userSchema.statics.findByTemporaryToken= function(tToken) {
+  return this.findOne({'temporaryToken.value': tToken})
+  .exec();
 };
 
 userSchema.statics.findOneByEmail = function (email, callback) {
