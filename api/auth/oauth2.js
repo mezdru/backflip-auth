@@ -83,6 +83,7 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
     }).catch(err =>  done(err));
 }));
 
+
 // Exchange refreshToken for an access token.
 server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken, scope, body, authInfo, done) {
 
