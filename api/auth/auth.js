@@ -11,6 +11,7 @@ let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenMo
 let UserSession             = require('../../models/userSession'); 
 let crypto                  = require('crypto');
 
+// @todo This method is declared 2 times
 let generateTokens = function(userId, clientId, request, done){
   let model = {userId: userId, clientId: clientId};
   let tokenValue = crypto.randomBytes(32).toString('hex');
@@ -33,15 +34,9 @@ let generateTokens = function(userId, clientId, request, done){
       (new UserSession(userSession)).save()
       .then(() => {
         return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue});
-      }).catch((err) => {
-        return done(err);
-      });
-    }).catch((err) => {
-      return done(err);
-    });
-  }).catch((err) => {
-    return done(err);
-  });
+      }).catch((err) => done(err));
+    }).catch((err) => done(err));
+  }).catch((err) => done(err));
 }
 
 // responsible of Client strategy, for client which supports HTTP Basic authentication (required)
@@ -116,7 +111,7 @@ passport.use(new GoogleStrategy({
     callbackURL: process.env.GOOGLE_REDIRECT_URI,
     passReqToCallback: true},
     (req, token, refreshToken, profile, done) => {
-      
+
         ClientModel.findOne({ clientId: process.env.DEFAULT_CLIENT_ID }, function(err, client) {
             if (err) { return done(err); }
             if (!client) { return done(null, false); }

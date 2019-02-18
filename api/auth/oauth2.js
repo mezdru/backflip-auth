@@ -31,6 +31,7 @@ let UserSession             = require('../../models/userSession');
 // create OAuth 2.0 server
 let server = oauth2orize.createServer();
 
+// @todo This method is declared 2 times
 let generateTokens = function(userId, clientId, request, done){
     let model = {userId: userId, clientId: clientId};
     let tokenValue = crypto.randomBytes(32).toString('hex');
@@ -52,16 +53,10 @@ let generateTokens = function(userId, clientId, request, done){
         };
         (new UserSession(userSession)).save()
         .then(() => {
-          done(null, tokenValue, refreshTokenValue, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT});
-        }).catch((err) => {
-          return done(err);
-        });
-      }).catch((err) => {
-        return done(err);
-      });
-    }).catch((err) => {
-      return done(err);
-    });
+          return done(null, tokenValue, refreshTokenValue, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT});
+        }).catch((err) => done(err));
+      }).catch((err) => done(err));
+    }).catch((err) => done(err));
 }
 
 let getError = (message, code) => {
