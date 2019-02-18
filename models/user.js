@@ -154,6 +154,7 @@ userSchema.statics.findByGoogleOrCreate = function (profileGoogle, idToken, refr
             normalized: this.normalizeEmail(profileGoogle.email),
             tokens: tokens
           }
+          if(user.email && user.email.value && user.email.value === profileGoogle.email) user.email.validated = true;
           return resolve(user.save());
         }
       }else {
