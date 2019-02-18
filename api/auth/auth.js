@@ -32,8 +32,20 @@ let generateTokens = function(userId, clientId, request, done){
         userIP: request.headers['x-forwarded-for'] || request.connection.remoteAddress
       };
       (new UserSession(userSession)).save()
-      .then(() => {
-        return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue});
+      .then((userSessionObject) => {
+        User.findById(userId)
+        .then((user) => {
+          user.temporaryToken = { 
+                                  value: crypto.randomBytes(32).toString('hex'), 
+                                  generated: Date.now(), 
+                                  userSession: userSessionObject._id
+                                };
+          user.save()
+          .then(() => {
+            return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue});
+          }).catch((err) => done(err));
+        }).catch((err) => done(err));
+        
       }).catch((err) => done(err));
     }).catch((err) => done(err));
   }).catch((err) => done(err));

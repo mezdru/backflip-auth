@@ -52,7 +52,8 @@ let userSchema = mongoose.Schema({
   salt: {type: String, select: false},
   temporaryToken: {
     value: String, 
-    generated: Date
+    generated: Date,
+    userSession: {type: mongoose.Schema.Types.ObjectId, ref: 'UserSession', default: null}
   }
 });
 
@@ -118,6 +119,11 @@ userSchema.methods.attachOrgAndRecord = function(organisation, record, callback)
   }
   if (callback) this.save(callback);
   else return this;
+};
+
+userSchema.statics.findByTemporaryToken= function(tToken) {
+  return this.findOne({'temporaryToken.value': tToken})
+  .exec();
 };
 
 userSchema.statics.findOneByEmail = function (email, callback) {
