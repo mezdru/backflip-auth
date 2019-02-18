@@ -8,8 +8,36 @@ let User                    = require('../../models/user');
 let ClientModel             = require('../../models/tokenModels').ClientModel;
 let AccessTokenModel        = require('../../models/tokenModels').AccessTokenModel;
 let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenModel;
+let UserSession             = require('../../models/userSession'); 
 let crypto                  = require('crypto');
 
+// @todo This method is declared 2 times
+let generateTokens = function(userId, clientId, request, done){
+  let model = {userId: userId, clientId: clientId};
+  let tokenValue = crypto.randomBytes(32).toString('hex');
+  let refreshTokenValue = crypto.randomBytes(32).toString('hex');
+
+  model.token = refreshTokenValue;
+  (new RefreshTokenModel(model)).save()
+  .then((refreshToken) => {
+    model.token = tokenValue;
+    (new AccessTokenModel(model)).save()
+    .then((accessToken) => {
+      let userSession = {
+        accessToken: accessToken._id,
+        refreshToken: refreshToken._id,
+        clientId: clientId,
+        user: userId,
+        userAgent: request.headers['user-agent'],
+        userIP: request.headers['x-forwarded-for'] || request.connection.remoteAddress
+      };
+      (new UserSession(userSession)).save()
+      .then(() => {
+        return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue});
+      }).catch((err) => done(err));
+    }).catch((err) => done(err));
+  }).catch((err) => done(err));
+}
 
 // responsible of Client strategy, for client which supports HTTP Basic authentication (required)
 passport.use(new BasicStrategy(
@@ -37,27 +65,34 @@ passport.use(new ClientPasswordStrategy(
 ));
 
 // responsible of Access strategy
-passport.use(new BearerStrategy(function(accessToken, done) {
-        AccessTokenModel.findOne({token: accessToken}, function(err, token){
-            if (err) return done(err);
-            if (!token) return done(null, false);
+passport.use(new BearerStrategy({ passReqToCallback: true }, function(req, accessToken, done) {
+  if(!accessToken) return done(null, false);
+  AccessTokenModel.findOne({token: accessToken})
+  .then(accessTokenObject => {
+    if (!accessTokenObject) return done(null, false);
 
-            // token expired 
-            if(Math.round((Date.now()-token.created)/1000) > process.env.DEFAULT_TOKEN_TIMEOUT){
-                AccessTokenModel.remove({token: accessToken}, function(err){
-                    if(err) return done(err);
-                });
-                return done(null, false, {message: 'Token expired'});
-            }
-
-            // token not expired
-            User.findById(token.userId, function(err, user){
-                if(err) return done(err);
-                if(!user) return done(null, false, {message: 'Unknown user'});
-                var info = {scope: '*'};
-                done(null, user, info);
-            });
+    UserSession.findByAccessToken(accessTokenObject._id)
+    .then(userSession => {
+      if(!userSession) return done(null, false);
+  
+      // token expired
+      if(Math.round((Date.now()-userSession.accessToken.created)/1000) > process.env.DEFAULT_TOKEN_TIMEOUT){
+        AccessTokenModel.remove({token: userSession.accessToken.token}, function(err){
+            if(err) return done(err);
         });
+        return done(null, false, {message: 'Token expired'});
+      }
+  
+      // token not expired
+      User.findById(userSession.user, function(err, user){
+        if(err) return done(err);
+        if(!user) return done(null, false, {message: 'Unknown user'});
+        var info = {scope: '*'};
+        done(null, user, info);
+      });
+
+    }).catch(err => done(err));
+  }).catch(err => done(err));
 }));
 
 passport.serializeUser(function(user, done) {
@@ -76,6 +111,7 @@ passport.use(new GoogleStrategy({
     callbackURL: process.env.GOOGLE_REDIRECT_URI,
     passReqToCallback: true},
     (req, token, refreshToken, profile, done) => {
+
         ClientModel.findOne({ clientId: process.env.DEFAULT_CLIENT_ID }, function(err, client) {
             if (err) { return done(err); }
             if (!client) { return done(null, false); }
@@ -84,25 +120,7 @@ passport.use(new GoogleStrategy({
             // find user or create by googleId
             User.findByGoogleOrCreate(profile, token, refreshToken)
             .then((user)=>{
-                let tokenModel = {userId: user._id, clientId: client.clientId};
-                let tokenValue = crypto.randomBytes(32).toString('hex');
-                let refreshTokenValue = crypto.randomBytes(32).toString('hex');
-
-                RefreshTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
-                tokenModel.token = refreshTokenValue;
-                (new RefreshTokenModel(tokenModel)).save(function(err){
-                    if(err) return done(err);
-                });
-
-                // AccessToken handle
-                AccessTokenModel.remove({userId: user._id}).catch(err=>{return done(err);});
-                tokenModel.token = tokenValue;
-                (new AccessTokenModel(tokenModel)).save(function(err){
-                    if(err) return done(err);
-                });
-                
-
-                return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue, _id: user._id});
+              return generateTokens(user._id, client.clientId, req, done);
             }).catch((error)=>{
                 return done(error);
             });
