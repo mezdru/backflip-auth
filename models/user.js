@@ -144,7 +144,8 @@ userSchema.statics.findByGoogleOrCreate = function (profileGoogle, idToken, refr
 
       if(user){
         if(user.google.id === profileGoogle.id){
-          return resolve(user);
+          if(user.email && user.email.value && (user.email.value === profileGoogle.email) && !user.email.validated) user.email.validated = true;
+          return resolve(user.save());
         } else {
           // update user
           user.google = {
@@ -154,7 +155,7 @@ userSchema.statics.findByGoogleOrCreate = function (profileGoogle, idToken, refr
             normalized: this.normalizeEmail(profileGoogle.email),
             tokens: tokens
           }
-          if(user.email && user.email.value && user.email.value === profileGoogle.email) user.email.validated = true;
+          if(user.email && user.email.value && (user.email.value === profileGoogle.email) && !user.email.validated) user.email.validated = true;
           return resolve(user.save());
         }
       }else {
