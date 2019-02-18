@@ -42,7 +42,7 @@ let generateTokens = function(userId, clientId, request, done){
                                 };
           user.save()
           .then(() => {
-            return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue});
+            return done(null, {access_token: tokenValue, refresh_token: refreshTokenValue, userId: userId});
           }).catch((err) => done(err));
         }).catch((err) => done(err));
         
