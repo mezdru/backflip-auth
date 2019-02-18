@@ -116,6 +116,7 @@ passport.use(new GoogleStrategy({
     callbackURL: process.env.GOOGLE_REDIRECT_URI,
     passReqToCallback: true},
     (req, token, refreshToken, profile, done) => {
+      
         ClientModel.findOne({ clientId: process.env.DEFAULT_CLIENT_ID }, function(err, client) {
             if (err) { return done(err); }
             if (!client) { return done(null, false); }

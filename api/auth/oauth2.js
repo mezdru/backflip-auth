@@ -81,7 +81,6 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
         try{
             if (!user.checkPassword(password)) return done(getError('Wrong password.', 403), false); 
         }catch(err){
-          console.log(err)
             return done(getError('User has no password.', 403), false);
         }
 
