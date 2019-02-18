@@ -172,6 +172,7 @@ userSchema.statics.findByGoogleOrCreate = function (profileGoogle, idToken, refr
   });
 }
 
+
 userSchema.statics.normalizeEmail = function(email) {
   return normalizeEmail(email,
     {
