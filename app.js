@@ -104,8 +104,10 @@ app.get('/google', addSession, (req, res, next) => {
 });
 
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
+  console.log('Google callback')
   User.findById(req.user.userId)
   .then((user) => {
+    console.log('User fetched: ' + user.google.email);
     const io = req.app.get('io');
     io.in(req.session.socketId).emit('google', {temporaryToken: user.temporaryToken.value, state : req.session.state});
   }).catch(e => {console.log(e)}); 
