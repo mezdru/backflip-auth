@@ -49,15 +49,6 @@ if (app.get('env') === 'production') {
 // Init passport
 app.use(passport.initialize());
 
-app.get('/redirect', (req, res, next) => {
-  let state = (req.query.state ? JSON.parse(req.query.state) : null);
-  return res.redirect((process.env.NODE_ENV === 'development' ? 'http://' : 'https://')+ 
-                      process.env.HOST_FRONTFLIP + 
-                      ( (state && state.orgTag) ? '/' + state.orgTag : '') + 
-                      '/signin/google/callback?token='+req.query.token+
-                      ((req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
-});
-
 // OAuth2 server
 let oauth2 = require('./api/auth/oauth2');
 require('./api/auth/auth');
@@ -85,15 +76,37 @@ app.post('/locale/exchange', (req, res, next) => {
 
 app.use('/locale', oauth2.token);
 
+const session = require('express-session');
+app.use(session({ 
+  secret: process.env.SESSION_SECRET, 
+  resave: true, 
+  saveUninitialized: true
+}));
+
+// This custom middleware allows us to attach the socket id to the session.
+// With the socket id attached we can send back the right user info to 
+// the right socket
+const addSession = (req, res, next) => {
+  try {
+    req.session.socketId = req.query.socketId;
+    req.session.state = req.query.state;
+  } catch(e) {
+    // log
+  } finally {
+    next();
+  }
+}
+
 // Google OAuth
-app.get('/google', (req, res, next) => {
+app.get('/google', addSession, (req, res, next) => {
   return passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email'], state: req.query.state})(req, res);
 });
 
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
   User.findById(req.user.userId)
   .then((user) => {
-      return res.redirect('/redirect?token='+user.temporaryToken.value+( (req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
+    const io = req.app.get('io');
+    io.in(req.session.socketId).emit('google', {temporaryToken: user.temporaryToken.value, state : req.session.state});
   });
 });
 
