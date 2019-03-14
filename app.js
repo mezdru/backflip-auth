@@ -92,7 +92,6 @@ const addSession = (req, res, next) => {
     req.session.state = req.query.state;
   } catch(e) {
     // log
-    console.log(e);
   } finally {
     next();
   }
@@ -108,7 +107,7 @@ app.get('/google/callback', passport.authenticate('google'), function(req, res, 
   .then((user) => {
     const io = req.app.get('io');
     io.in(req.session.socketId).emit('google', {temporaryToken: user.temporaryToken.value, state : req.session.state});
-  }).catch(e => {console.log(e)}); 
+  });
 });
 
 // Register
