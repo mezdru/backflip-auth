@@ -7,7 +7,6 @@
 var app = require('../app');
 var debug = require('debug')('backflip:server');
 var http = require('http');
-const socketio = require('socket.io')
 
 /**
  * Get port from environment and store in Express.
@@ -21,13 +20,6 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-
-/**
- * Connecting socket to the request
- */
-
-const io = socketio(server);
-app.set('io', io);
 
 /**
  * Listen on provided port, on all network interfaces.
