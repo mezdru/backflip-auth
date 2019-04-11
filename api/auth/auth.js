@@ -4,6 +4,7 @@ let BasicStrategy           = require('passport-http').BasicStrategy;
 let ClientPasswordStrategy  = require('passport-oauth2-client-password').Strategy;
 let BearerStrategy          = require('passport-http-bearer').Strategy;
 let GoogleStrategy          = require('passport-google-oauth2').Strategy;
+let LinkedinStrategy        = require('@sokratis/passport-linkedin-oauth2').Strategy;
 let User                    = require('../../models/user');
 let ClientModel             = require('../../models/tokenModels').ClientModel;
 let AccessTokenModel        = require('../../models/tokenModels').AccessTokenModel;
@@ -139,3 +140,23 @@ passport.use(new GoogleStrategy({
         });
     }
 ));
+
+// Linkedin auth strategy
+passport.use(new LinkedinStrategy({
+  clientID: process.env.LINKEDIN_CLIENT_ID,
+  clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+  callbackURL: process.env.LINKEDIN_REDIRECT_URI,
+  scope: ['r_emailaddress', 'r_liteprofile', 'r_fullprofile']
+}, function(accessToken, refreshToken, profile, done) {
+  // asynchronous verification, for effect...
+  console.log('here2')
+  console.log(accessToken);
+  console.log(refreshToken)
+  // process.nextTick(function () {
+    // To keep the example simple, the user's LinkedIn profile is returned to
+    // represent the logged-in user. In a typical application, you would want
+    // to associate the LinkedIn account with a user record in your database,
+    // and return that user instead.
+    return done(null, profile);
+  // });
+})); 

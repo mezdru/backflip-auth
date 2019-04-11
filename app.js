@@ -83,6 +83,7 @@ app.post('/locale/exchange', (req, res, next) => {
 
 });
 
+// Locale OAuth
 app.use('/locale', oauth2.token);
 
 // Google OAuth
@@ -95,6 +96,17 @@ app.get('/google/callback', passport.authenticate('google'), function(req, res, 
   .then((user) => {
       return res.redirect('/redirect?token='+user.temporaryToken.value+( (req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
   });
+});
+
+// Linkedin OAuth
+app.get('/linkedin', (req, res, next) => {
+  console.log('here')
+  return passport.authenticate('linkedin', { scope: ['r_liteprofile', 'r_emailaddress', 'r_fullprofile'] , state: req.query.state})(req, res, next);
+});
+
+app.get('/linkedin/callback', passport.authenticate('linkedin'), function(req, res, next){
+  console.log('ok')
+  return res.status(200).json({user: req.user});
 });
 
 // Register
