@@ -173,7 +173,7 @@ passport.use(new LinkedinStrategy({
       } else {
 
         // Classic REGISTER
-        (new User()).save()
+        (new User({linkedinUser: currentLinkedinUser, email: {value: currentLinkedinUser.email, validated: true}})).save()
         .then( newUser => {
           currentLinkedinUser.linkUser(newUser)
           .then(() => {

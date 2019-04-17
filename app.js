@@ -104,8 +104,11 @@ app.get('/linkedin', (req, res, next) => {
 });
 
 app.get('/linkedin/callback', passport.authenticate('linkedin'), function(req, res, next){
-  console.log('ok')
-  return res.status(200).json({user: req.user});
+  User.findById(req.user.userId)
+  .then((user) => {
+    console.log(user)
+      return res.redirect('/redirect?token='+user.temporaryToken.value+( (req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
+  });
 });
 
 // Register
