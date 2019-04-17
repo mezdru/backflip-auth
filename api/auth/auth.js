@@ -6,6 +6,7 @@ let BearerStrategy          = require('passport-http-bearer').Strategy;
 let GoogleStrategy          = require('passport-google-oauth2').Strategy;
 let LinkedinStrategy        = require('@sokratis/passport-linkedin-oauth2').Strategy;
 let User                    = require('../../models/user');
+let LinkedinUser            = require('../../models/linkedinUser');
 let ClientModel             = require('../../models/tokenModels').ClientModel;
 let AccessTokenModel        = require('../../models/tokenModels').AccessTokenModel;
 let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenModel;
@@ -146,17 +147,44 @@ passport.use(new LinkedinStrategy({
   clientID: process.env.LINKEDIN_CLIENT_ID,
   clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
   callbackURL: process.env.LINKEDIN_REDIRECT_URI,
-  scope: ['r_emailaddress', 'r_liteprofile', 'r_fullprofile']
-}, function(accessToken, refreshToken, profile, done) {
-  // asynchronous verification, for effect...
-  console.log('here2')
-  console.log(accessToken);
-  console.log(refreshToken)
-  // process.nextTick(function () {
-    // To keep the example simple, the user's LinkedIn profile is returned to
-    // represent the logged-in user. In a typical application, you would want
-    // to associate the LinkedIn account with a user record in your database,
-    // and return that user instead.
-    return done(null, profile);
-  // });
+  scope: ['r_emailaddress', 'r_liteprofile'],
+  passReqToCallback: true
+}, function(req, accessToken, refreshToken, profile, done) {
+
+  ClientModel.findOne({ clientId: process.env.DEFAULT_CLIENT_ID }, function(err, client) {
+
+    if (err) { return done(err); }
+    if (!client) { return done(null, false); }
+    if (client.clientSecret != process.env.DEFAULT_CLIENT_SECRET) { return done(null, false); }
+
+    // Find user or create by linkedinId
+    LinkedinUser.findByLinkedinOrCreate(profile, accessToken, refreshToken)
+    .then(currentLinkedinUser => {
+      //@TODO User can be already auth
+
+      if (currentLinkedinUser.user) {
+
+        // Classic SIGNIN
+        User.findOne({_id: currentLinkedinUser.user})
+        .then(currentUser => {
+          return generateTokens(currentUser._id, client.clientId, req, done);
+        }).catch(error => {return done(error);});
+
+      } else {
+
+        // Classic REGISTER
+        (new User()).save()
+        .then( newUser => {
+          currentLinkedinUser.linkUser(newUser)
+          .then(() => {
+            return generateTokens(newUser._id, client.clientId, req, done);
+          }).catch(error => {return done(error);});
+        }).catch(error => {return done(error);});
+
+      }
+
+    }).catch(error => {return done(error);});
+    
+  });
+
 })); 

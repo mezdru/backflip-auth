@@ -100,8 +100,7 @@ app.get('/google/callback', passport.authenticate('google'), function(req, res, 
 
 // Linkedin OAuth
 app.get('/linkedin', (req, res, next) => {
-  console.log('here')
-  return passport.authenticate('linkedin', { scope: ['r_liteprofile', 'r_emailaddress', 'r_fullprofile'] , state: req.query.state})(req, res, next);
+  return passport.authenticate('linkedin', { scope: ['r_liteprofile', 'r_emailaddress'] , state: req.query.state})(req, res, next);
 });
 
 app.get('/linkedin/callback', passport.authenticate('linkedin'), function(req, res, next){
