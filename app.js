@@ -126,6 +126,10 @@ app.use('/register/organisation', passport.authenticate('bearer', {session: fals
 let passwordReset = require('./api/password/password');
 app.use('/password/reset', passwordReset);
 
+// API LINKEDIN
+let apiLinkedin = require('./api/linkedin/api_linkedin');
+app.use('/api/linkedin', passport.authenticate('bearer', {session: false}), apiLinkedin);
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
