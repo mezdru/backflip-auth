@@ -156,7 +156,7 @@ passport.use(new LinkedinStrategy({
     if (err) { return done(err); }
     if (!client) { return done(null, false); }
     if (client.clientSecret != process.env.DEFAULT_CLIENT_SECRET) { return done(null, false); }
-    console.log(profile)
+
     // Find user or create by linkedinId
     LinkedinUser.findByLinkedinOrCreate(profile, accessToken, refreshToken)
     .then(currentLinkedinUser => {
@@ -180,7 +180,7 @@ passport.use(new LinkedinStrategy({
             return generateTokens(newUser._id, client.clientId, req, done);
           }).catch(error => {return done(error);});
         }).catch(error => {return done(error);});
-
+        
       }
 
     }).catch(error => {return done(error);});
