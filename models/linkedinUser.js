@@ -6,6 +6,11 @@ var LinkedinUserSchema = mongoose.Schema({
   linkedinId: {type: String, required: true},
   name: {type: String},
   email: {type: String},
+  emails: [
+    {
+      value: {type: String}
+    }
+  ],
   pictures: [
     {
       value: {type: String}
@@ -43,6 +48,7 @@ LinkedinUserSchema.statics.findByLinkedinOrCreate = async (profileLinkedin, acce
         linkedinId: profileLinkedin.id,
         name: profileLinkedin.displayName,
         email: getLinkedinEmail(profileLinkedin),
+        emails: profileLinkedin.emails,
         pictures: profileLinkedin.photos,
         accessToken: accessToken,
         refreshToken: refreshToken,
