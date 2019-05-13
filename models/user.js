@@ -131,6 +131,12 @@ userSchema.statics.findOneByEmail = function (email, callback) {
   email = this.normalizeEmail(email);
   this.findOne({$or: [{'google.normalized':email}, {'email.normalized':email}] }, callback);
 };
+
+userSchema.statics.findOneByEmailAsync = function(email) {
+  email = this.normalizeEmail(email);
+  return this.findOne({$or: [{'google.normalized':email}, {'email.normalized':email}, {'email.value': email}] });
+}
+
 userSchema.statics.findOneByEmailWithPassword  = function (email) {
   email = this.normalizeEmail(email);
   return this.findOne({$or: [{'google.normalized':email}, {'email.normalized':email}] }).select('hashedPassword salt google email');
