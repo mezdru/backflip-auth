@@ -54,7 +54,8 @@ let userSchema = mongoose.Schema({
     value: String, 
     generated: Date,
     userSession: {type: mongoose.Schema.Types.ObjectId, ref: 'UserSession', default: null}
-  }
+  },
+  linkedinUser: {type: mongoose.Schema.Types.ObjectId, ref: 'LinkedinUser', default: null}
 });
 
 // PASSWORD MANAGE

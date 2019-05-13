@@ -4,7 +4,9 @@ let BasicStrategy           = require('passport-http').BasicStrategy;
 let ClientPasswordStrategy  = require('passport-oauth2-client-password').Strategy;
 let BearerStrategy          = require('passport-http-bearer').Strategy;
 let GoogleStrategy          = require('passport-google-oauth2').Strategy;
+let LinkedinStrategy        = require('@sokratis/passport-linkedin-oauth2').Strategy;
 let User                    = require('../../models/user');
+let LinkedinUser            = require('../../models/linkedinUser');
 let ClientModel             = require('../../models/tokenModels').ClientModel;
 let AccessTokenModel        = require('../../models/tokenModels').AccessTokenModel;
 let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenModel;
@@ -139,3 +141,50 @@ passport.use(new GoogleStrategy({
         });
     }
 ));
+
+// Linkedin auth strategy
+passport.use(new LinkedinStrategy({
+  clientID: process.env.LINKEDIN_CLIENT_ID,
+  clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+  callbackURL: process.env.LINKEDIN_REDIRECT_URI,
+  scope: ['r_emailaddress', 'r_liteprofile'],
+  passReqToCallback: true
+}, function(req, accessToken, refreshToken, profile, done) {
+
+  ClientModel.findOne({ clientId: process.env.DEFAULT_CLIENT_ID }, function(err, client) {
+
+    if (err) { return done(err); }
+    if (!client) { return done(null, false); }
+    if (client.clientSecret != process.env.DEFAULT_CLIENT_SECRET) { return done(null, false); }
+
+    // Find user or create by linkedinId
+    LinkedinUser.findByLinkedinOrCreate(profile, accessToken, refreshToken)
+    .then(currentLinkedinUser => {
+      //@TODO User can be already auth
+
+      if (currentLinkedinUser.user) {
+
+        // Classic SIGNIN
+        User.findOne({_id: currentLinkedinUser.user})
+        .then(currentUser => {
+          return generateTokens(currentUser._id, client.clientId, req, done);
+        }).catch(error => {return done(error);});
+
+      } else {
+
+        // Classic REGISTER
+        (new User({linkedinUser: currentLinkedinUser, email: {value: currentLinkedinUser.email, validated: true}})).save()
+        .then( newUser => {
+          currentLinkedinUser.linkUser(newUser)
+          .then(() => {
+            return generateTokens(newUser._id, client.clientId, req, done);
+          }).catch(error => {return done(error);});
+        }).catch(error => {return done(error);});
+        
+      }
+
+    }).catch(error => {return done(error);});
+    
+  });
+
+})); 

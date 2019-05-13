@@ -83,6 +83,7 @@ app.post('/locale/exchange', (req, res, next) => {
 
 });
 
+// Locale OAuth
 app.use('/locale', oauth2.token);
 
 // Google OAuth
@@ -91,6 +92,18 @@ app.get('/google', (req, res, next) => {
 });
 
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
+  User.findById(req.user.userId)
+  .then((user) => {
+      return res.redirect('/redirect?token='+user.temporaryToken.value+( (req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
+  });
+});
+
+// Linkedin OAuth
+app.get('/linkedin', (req, res, next) => {
+  return passport.authenticate('linkedin', { scope: ['r_liteprofile', 'r_emailaddress'] , state: req.query.state})(req, res, next);
+});
+
+app.get('/linkedin/callback', passport.authenticate('linkedin'), function(req, res, next){
   User.findById(req.user.userId)
   .then((user) => {
       return res.redirect('/redirect?token='+user.temporaryToken.value+( (req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
@@ -111,6 +124,10 @@ app.use('/register/organisation', passport.authenticate('bearer', {session: fals
 
 let passwordReset = require('./api/password/password');
 app.use('/password/reset', passwordReset);
+
+// API LINKEDIN
+let apiLinkedin = require('./api/linkedin/api_linkedin');
+app.use('/api/linkedin', passport.authenticate('bearer', {session: false}), apiLinkedin);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
