@@ -39,6 +39,7 @@
     "passport-http": "^0.3.0",
     "passport-http-bearer": "^1.0.1",
     "passport-oauth2-client-password": "^0.1.2",
+    "randomstring": "^1.1.5",
     "validator": "^7.0.0"
   },
   "devDependencies": {}

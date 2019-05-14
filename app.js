@@ -129,6 +129,10 @@ app.use('/password/reset', passwordReset);
 let apiLinkedin = require('./api/linkedin/api_linkedin');
 app.use('/api/linkedin', passport.authenticate('bearer', {session: false}), apiLinkedin);
 
+// API INVITATION CODE
+let apiInvitationCode = require('./api/invitation/api_invitationCode');
+app.use('/api/invitation/code', passport.authenticate('bearer', {session: false}), apiInvitationCode);
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
