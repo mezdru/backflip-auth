@@ -66,18 +66,6 @@ organisationSchema.methods.validateCode = function (codeToValidate) {
 	});
 };
 
-organisationSchema.methods.addCode = function (starts, ends, creator, customCode, callback) {
-	var code = {
-		value: customCode || randomstring.generate(16),
-		creator: creator,
-		starts: starts || Date.now(),
-		ends: ends || Date.now() + 30 * 24 * 60 * 60 * 1000,
-		created: Date.now(),
-	};
-	this.codes.unshift(code);
-	if (callback) return this.save(callback);
-};
-
 organisationSchema.methods.isInDomain = function (user) {
 	if (user.email && user.email.value) {
 		let domain = user.email.value.split('@')[1];
