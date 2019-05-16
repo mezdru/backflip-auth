@@ -21,6 +21,7 @@
 var express = require('express');
 var router = express.Router();
 var Organisation = require('../../models/organisation');
+var InvitationCode = require('../../models/invitationCode');
 
 /**
  * @description Try to find Organisation by tag provided.
@@ -45,21 +46,27 @@ router.post('/:orgId/:invitationCode?', function(req, res, next) {
 
     // User try to access with a code
     if (req.params.invitationCode) {
-        if (res.locals.organisation.validateCode(req.params.invitationCode)) {
-            req.user.addInvitation(res.locals.organisation, res.locals.organisation.codes.find(code => code.value === req.params.invitationCode).creator, req.params.invitationCode);
-            req.user.attachOrgAndRecord(res.locals.organisation, null);
-        } else {
-            return res.status(403).json({message: 'Invitation expired'});
-        }
+
+        InvitationCode.validateCode(req.params.invitationCode, res.locals.organisation._id, req.user)
+        .then(isCodeValid => {
+            if(isCodeValid) {
+                req.user.attachOrgAndRecord(res.locals.organisation, null);
+                next();
+            } else {
+                return res.status(403).json({message: 'Invitation expired'});
+            }
+        }).catch((e) => {next(e);})
+
     }else{
         // Email domains access
         if(res.locals.organisation.isInDomain(req.user) || req.user.isSuperAdmin()) {
             req.user.attachOrgAndRecord(res.locals.organisation, null);
+            next();
         }else{
             return res.status(403).json({message: 'User can\'t access the Organisation.'});
         }
     }
-    next();
+    
 });  
 
 /**
