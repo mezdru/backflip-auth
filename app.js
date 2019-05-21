@@ -112,15 +112,10 @@ app.get('/google/callback', passport.authenticate('google'), function(req, res, 
 
 // Linkedin OAuth
 app.get('/linkedin', (req, res, next) => {
-  // req.queryState = req.query.state;
-  console.log('>> !!')
-  console.log(req.query.state)
   return passport.authenticate('linkedin', { scope: ['r_liteprofile', 'r_emailaddress'] , state: req.query.state})(req, res, next);
 });
 
 app.get('/linkedin/callback', passport.authenticate('linkedin'), function(req, res, next){
-  console.log('---')
-  console.log(req.user)
   let state = (req.query.state && req.query.state !== '{}' ? JSON.parse(req.query.state) : {});
   state.success = (req.user.userId ? 'true' : 'false');
   state = JSON.stringify(state);

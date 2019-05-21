@@ -159,13 +159,7 @@ passport.use(new LinkedinStrategy({
     if (!client) { return done(null, false); }
     if (client.clientSecret != process.env.DEFAULT_CLIENT_SECRET) { return done(null, false); }
 
-
     let state = (req.query.state ? JSON.parse(req.query.state) : {});
-
-    console.log('inside auth')
-    console.log(req.query.state)
-    console.log('action : ' + state.action)
-console.log('----')
 
     // Find user or create by linkedinId
     LinkedinUser.findByLinkedinOrCreate(profile, accessToken, refreshToken)
@@ -208,9 +202,8 @@ console.log('----')
             }).catch(err => { console.log(err); });
 
         } else {
-
+          
           // User wants Sign In but haven't a LinkedIn account yet.
-          console.log(currentLinkedinUser.temporaryToken.value)
           return done(null, {temporaryToken: currentLinkedinUser.temporaryToken.value});
 
         }
