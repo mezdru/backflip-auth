@@ -101,9 +101,13 @@ app.get('/google', (req, res, next) => {
 });
 
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
+  let state = (req.query.state && req.query.state !== '{}' ? JSON.parse(req.query.state) : {});
+  state.success = (req.user.userId ? 'true' : 'false');
+  state = JSON.stringify(state);
+
   User.findById(req.user.userId)
   .then((user) => {
-      return res.redirect('/redirect?token='+user.temporaryToken.value+( (req.query.state && req.query.state !== '{}') ? '&state='+req.query.state : ''));
+      return res.redirect('/redirect?token='+user.temporaryToken.value+( (state && state !== '{}') ? '&state='+state : ''));
   });
 });
 
