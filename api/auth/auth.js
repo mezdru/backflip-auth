@@ -165,8 +165,6 @@ passport.use(new LinkedinStrategy({
       .then(currentLinkedinUser => {
         //@TODO User can be already auth
 
-        currentLinkedinUser.user = null;
-
         if (currentLinkedinUser.user) {
 
           // Classic SIGNIN
