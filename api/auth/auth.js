@@ -152,7 +152,6 @@ passport.use(new LinkedinStrategy({
   passReqToCallback: true
 }, function (req, accessToken, refreshToken, profile, done) {
 
-  console.log('Hey')
   ClientModel.findOne({ clientId: process.env.DEFAULT_CLIENT_ID }, function (err, client) {
 
     if (err) { return done(err); }
@@ -202,7 +201,7 @@ passport.use(new LinkedinStrategy({
             }).catch(err => { console.log(err); });
 
         } else {
-          
+
           // User wants Sign In but haven't a LinkedIn account yet.
           return done(null, {temporaryToken: currentLinkedinUser.temporaryToken.value});
 
