@@ -60,6 +60,23 @@ let generateTokens = function(userId, clientId, request, done){
     }).catch((err) => done(err));
 }
 
+let linkIntegration = async (integrationToken, user) => {
+  if(integrationToken) {
+    return LinkedinUser.findOne({'temporaryToken.value': integrationToken})
+    .then(linkedinUser => {
+      linkedinUser.linkUser(user)
+      .then(() => {
+        user.linkLinkedinUser(linkedinUser)
+        .then(() => {
+          return;
+        });
+      });
+    }).catch(() => {return;});
+  } else {
+    return Promise.resolve();
+  }
+}
+
 let getError = (message, code) => {
   let error = new Error(message);
   error.status = code;
@@ -81,22 +98,10 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
         }
 
         // Is there an integration to link to the User ?
-        if(body.integration_token) {
-          LinkedinUser.findOne({'temporaryToken.value': body.integration_token})
-          .then(linkedinUser => {
-            linkedinUser.linkUser(user)
-            .then(() => {
-              user.linkLinkedinUser(linkedinUser)
-              .then(() => {
-                return generateTokens(user._id, client.clientId, authInfo.req, done);
-              });
-            });
-          }).catch(() => {
-            return generateTokens(user._id, client.clientId, authInfo.req, done);
-          });
-        } else {
+        linkIntegration(body.integration_token, user)
+        .then(() => {
           return generateTokens(user._id, client.clientId, authInfo.req, done);
-        }
+        });
 
     }).catch(err =>  done(err));
 }));

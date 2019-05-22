@@ -34,6 +34,10 @@ LinkedinUserSchema.methods.login = function() {
 
 LinkedinUserSchema.methods.linkUser = function(user){
   this.user = user;
+  this.temporaryToken = {
+    value: null,
+    generated: Date.now()
+  };
   return this.save();
 }
 
