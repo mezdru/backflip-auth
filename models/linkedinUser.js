@@ -1,5 +1,5 @@
 let mongoose = require('mongoose');
-let User = require('./user');
+let crypto = require('crypto');
 
 var LinkedinUserSchema = mongoose.Schema({
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
@@ -20,7 +20,11 @@ var LinkedinUserSchema = mongoose.Schema({
   refreshToken: {type: String},
   created: { type: Date, default: Date.now },
   updated: { type: Date, default: Date.now },
-  last_login: {type: Date, default: Date.now}
+  last_login: {type: Date, default: Date.now},
+  temporaryToken: {
+    value: String, 
+    generated: {type: Date},
+  },
 });
 
 LinkedinUserSchema.methods.login = function() {
@@ -30,7 +34,20 @@ LinkedinUserSchema.methods.login = function() {
 
 LinkedinUserSchema.methods.linkUser = function(user){
   this.user = user;
+  this.temporaryToken = {
+    value: null,
+    generated: Date.now()
+  };
   return this.save();
+}
+LinkedinUserSchema.statics.linkUserFromToken = function(temporaryToken, user) {
+  return LinkedinUser.findOne({'temporaryToken.value': temporaryToken})
+  .then(linkedinUser => {
+    return linkedinUser.linkUser(user)
+    .then(() => {
+      return user.linkLinkedinUser(linkedinUser);
+    })
+  })
 }
 
 LinkedinUserSchema.statics.findByLinkedinOrCreate = async (profileLinkedin, accessToken, refreshToken) => {
@@ -52,6 +69,10 @@ LinkedinUserSchema.statics.findByLinkedinOrCreate = async (profileLinkedin, acce
         pictures: profileLinkedin.photos,
         accessToken: accessToken,
         refreshToken: refreshToken,
+        temporaryToken: {
+          value: crypto.randomBytes(32).toString('hex'),
+          generated: Date.now(),
+        }
       })).save();
     }
   });

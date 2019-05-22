@@ -126,6 +126,7 @@ passport.use(new GoogleStrategy({
   passReqToCallback: true
 },
   (req, token, refreshToken, profile, done) => {
+    let state = (req.query.state ? JSON.parse(req.query.state) : {});
 
     ClientModel.findOne({ clientId: process.env.DEFAULT_CLIENT_ID }, function (err, client) {
       if (err) { return done(err); }
@@ -135,7 +136,12 @@ passport.use(new GoogleStrategy({
       // find user or create by googleId
       User.findByGoogleOrCreate(profile, token, refreshToken)
         .then((user) => {
+
+          // Is there an integration to link to the User ?
+          if(state.integrationToken) LinkedinUser.linkUserFromToken(state.integrationToken, user);
+
           return generateTokens(user._id, client.clientId, req, done);
+
         }).catch((error) => {
           return done(error);
         });
@@ -158,6 +164,8 @@ passport.use(new LinkedinStrategy({
     if (!client) { return done(null, false); }
     if (client.clientSecret != process.env.DEFAULT_CLIENT_SECRET) { return done(null, false); }
 
+    let state = (req.query.state ? JSON.parse(req.query.state) : {});
+
     // Find user or create by linkedinId
     LinkedinUser.findByLinkedinOrCreate(profile, accessToken, refreshToken)
       .then(currentLinkedinUser => {
@@ -166,40 +174,33 @@ passport.use(new LinkedinStrategy({
         if (currentLinkedinUser.user) {
 
           // Classic SIGNIN
-          User.findOne({ _id: currentLinkedinUser.user })
-            .then(currentUser => {
-              return generateTokens(currentUser._id, client.clientId, req, done);
-            }).catch(error => { return done(error); });
+          return User.findOne({ _id: currentLinkedinUser.user })
+            .then(currentUser => generateTokens(currentUser._id, client.clientId, req, done));
 
-        } else {
+        } else if(!state || !state.action || (state.action === 'signup')) {
 
           // Classic REGISTER
-          // User with same email can already exists
+          // User with same email can already exists : we only fetch the main email address for the moment.
           User.findOneByEmailAsync(currentLinkedinUser.email)
             .then(user => {
 
               if (!user) {
-                (new User({ linkedinUser: currentLinkedinUser, email: { value: currentLinkedinUser.email, validated: true, normalized: User.normalizeEmail(currentLinkedinUser.email) } })).save()
-                  .then(newUser => {
-                    currentLinkedinUser.linkUser(newUser)
-                      .then(() => {
-                        return generateTokens(newUser._id, client.clientId, req, done);
-                      }).catch(error => { return done(error); });
-                  }).catch(error => { return done(error); });
-
+                return User.createFromLinkedin(currentLinkedinUser)
+                .then(newUser => generateTokens(newUser._id, client.clientId, req, done));
               } else {
-                currentLinkedinUser.linkUser(user)
-                  .then(() => {
-                    return generateTokens(user._id, client.clientId, req, done);
-                  }).catch(error => { return done(error); });
+                return currentLinkedinUser.linkUser(user)
+                  .then(() => generateTokens(user._id, client.clientId, req, done));
               }
 
-            }).catch(err => { console.log(err); });
+            });
+
+        } else {
+
+          // User wants Sign In but haven't a LinkedIn account yet.
+          return done(null, {temporaryToken: currentLinkedinUser.temporaryToken.value});
 
         }
 
       }).catch(error => { return done(error); });
-
   });
-
 })); 
