@@ -174,10 +174,8 @@ passport.use(new LinkedinStrategy({
         if (currentLinkedinUser.user) {
 
           // Classic SIGNIN
-          User.findOne({ _id: currentLinkedinUser.user })
-            .then(currentUser => {
-              return generateTokens(currentUser._id, client.clientId, req, done);
-            }).catch(error => { return done(error); });
+          return User.findOne({ _id: currentLinkedinUser.user })
+            .then(currentUser => generateTokens(currentUser._id, client.clientId, req, done));
 
         } else if(!state || !state.action || (state.action === 'signup')) {
 
@@ -187,22 +185,14 @@ passport.use(new LinkedinStrategy({
             .then(user => {
 
               if (!user) {
-                (new User({ linkedinUser: currentLinkedinUser, email: { value: currentLinkedinUser.email, validated: true, normalized: User.normalizeEmail(currentLinkedinUser.email) } })).save()
-                  .then(newUser => {
-                    currentLinkedinUser.linkUser(newUser)
-                      .then(() => {
-                        return generateTokens(newUser._id, client.clientId, req, done);
-                      }).catch(error => { return done(error); });
-                  }).catch(error => { return done(error); });
-
+                return User.createFromLinkedin(currentLinkedinUser)
+                .then(newUser => generateTokens(newUser._id, client.clientId, req, done));
               } else {
-                currentLinkedinUser.linkUser(user)
-                  .then(() => {
-                    return generateTokens(user._id, client.clientId, req, done);
-                  }).catch(error => { return done(error); });
+                return currentLinkedinUser.linkUser(user)
+                  .then(() => generateTokens(user._id, client.clientId, req, done));
               }
 
-            }).catch(err => { console.log(err); });
+            });
 
         } else {
 
@@ -212,7 +202,5 @@ passport.use(new LinkedinStrategy({
         }
 
       }).catch(error => { return done(error); });
-
   });
-
 })); 

@@ -147,6 +147,16 @@ userSchema.statics.findOneByEmailWithPassword  = function (email) {
   return this.findOne({$or: [{'google.normalized':email}, {'email.normalized':email}] }).select('hashedPassword salt google email');
 };
 
+userSchema.statics.createFromLinkedin = function(linkedinUser) {
+  return (new User({ linkedinUser: linkedinUser, email: { value: linkedinUser.email, validated: true, normalized: User.normalizeEmail(linkedinUser.email) } })).save()
+  .then(newUser => {
+    return linkedinUser.linkUser(newUser)
+      .then(() => {
+        return newUser;
+      });
+  });
+}
+
 userSchema.statics.findByGoogleOrCreate = function (profileGoogle, idToken, refreshToken){
   return new Promise((resolve, reject) => {
     User.findOneByEmail(this.normalizeEmail(profileGoogle.email), (err, user) => {
