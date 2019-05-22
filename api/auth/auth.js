@@ -53,23 +53,6 @@ let generateTokens = function (userId, clientId, request, done) {
     }).catch((err) => done(err));
 }
 
-let linkIntegration = async (integrationToken, user) => {
-  if(integrationToken) {
-    return LinkedinUser.findOne({'temporaryToken.value': integrationToken})
-    .then(linkedinUser => {
-      linkedinUser.linkUser(user)
-      .then(() => {
-        user.linkLinkedinUser(linkedinUser)
-        .then(() => {
-          return;
-        });
-      });
-    }).catch(() => {return;});
-  } else {
-    return Promise.resolve();
-  }
-}
-
 // responsible of Client strategy, for client which supports HTTP Basic authentication (required)
 passport.use(new BasicStrategy(
   function (username, password, done) {
@@ -155,10 +138,9 @@ passport.use(new GoogleStrategy({
         .then((user) => {
 
           // Is there an integration to link to the User ?
-          linkIntegration(state.integrationToken, user)
-          .then(() => {
-            return generateTokens(user._id, client.clientId, req, done);
-          });
+          if(state.integrationToken) LinkedinUser.linkUserFromToken(state.integrationToken, user);
+
+          return generateTokens(user._id, client.clientId, req, done);
 
         }).catch((error) => {
           return done(error);

@@ -40,6 +40,15 @@ LinkedinUserSchema.methods.linkUser = function(user){
   };
   return this.save();
 }
+LinkedinUserSchema.statics.linkUserFromToken = function(temporaryToken, user) {
+  return LinkedinUser.findOne({'temporaryToken.value': temporaryToken})
+  .then(linkedinUser => {
+    return linkedinUser.linkUser(user)
+    .then(() => {
+      return user.linkLinkedinUser(linkedinUser);
+    })
+  })
+}
 
 LinkedinUserSchema.statics.findByLinkedinOrCreate = async (profileLinkedin, accessToken, refreshToken) => {
   return LinkedinUser.findOne({linkedinId: profileLinkedin.id})
