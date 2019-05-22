@@ -126,6 +126,7 @@ passport.use(new GoogleStrategy({
   passReqToCallback: true
 },
   (req, token, refreshToken, profile, done) => {
+    let state = (req.query.state ? JSON.parse(req.query.state) : {});
 
     ClientModel.findOne({ clientId: process.env.DEFAULT_CLIENT_ID }, function (err, client) {
       if (err) { return done(err); }
@@ -135,7 +136,25 @@ passport.use(new GoogleStrategy({
       // find user or create by googleId
       User.findByGoogleOrCreate(profile, token, refreshToken)
         .then((user) => {
-          return generateTokens(user._id, client.clientId, req, done);
+
+          // Is there an integration to link to the User ?
+          if(state.integrationToken) {
+            LinkedinUser.findOne({'temporaryToken.value': state.integrationToken})
+            .then(linkedinUser => {
+              linkedinUser.linkUser(user)
+              .then(() => {
+                user.linkLinkedinUser(linkedinUser)
+                .then(() => {
+                  return generateTokens(user._id, client.clientId, req, done);
+                });
+              });
+            }).catch(() => {
+              return generateTokens(user._id, client.clientId, req, done);
+            });
+          } else {
+            return generateTokens(user._id, client.clientId, req, done);
+          }
+
         }).catch((error) => {
           return done(error);
         });
