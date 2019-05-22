@@ -27,6 +27,7 @@ let User                    = require('../../models/user');
 let AccessTokenModel        = require('../../models/tokenModels').AccessTokenModel;
 let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenModel;
 let UserSession             = require('../../models/userSession');
+let LinkedinUser            = require('../../models/linkedinUser');
 
 // create OAuth 2.0 server
 let server = oauth2orize.createServer();
@@ -67,7 +68,7 @@ let getError = (message, code) => {
 
 // Exchange username & password for an access token.
 // This is in case of Login, we should call this after user is created for a person
-server.exchange(oauth2orize.exchange.password(function(client, email, password, scope, body, authInfo, done) {    
+server.exchange(oauth2orize.exchange.password(function(client, email, password, scope, body, authInfo, done) { 
     User.findOneByEmailWithPassword(email)
     .then(user => {
         if (!user) return done(getError('User does not exists.', 404), false);
@@ -79,7 +80,24 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
             return done(getError('User has no password.', 403), false);
         }
 
-        return generateTokens(user._id, client.clientId, authInfo.req, done);
+        // Is there an integration to link to the User ?
+        if(body.integration_token) {
+          LinkedinUser.findOne({'temporaryToken.value': body.integration_token})
+          .then(linkedinUser => {
+            linkedinUser.linkUser(user)
+            .then(() => {
+              user.linkLinkedinUser(linkedinUser)
+              .then(() => {
+                return generateTokens(user._id, client.clientId, authInfo.req, done);
+              });
+            });
+          }).catch(() => {
+            return generateTokens(user._id, client.clientId, authInfo.req, done);
+          });
+        } else {
+          return generateTokens(user._id, client.clientId, authInfo.req, done);
+        }
+
     }).catch(err =>  done(err));
 }));
 

@@ -122,6 +122,11 @@ userSchema.methods.attachOrgAndRecord = function(organisation, record, callback)
   else return this;
 };
 
+userSchema.methods.linkLinkedinUser = function(linkedinUser) {
+  this.linkedinUser = linkedinUser;
+  return this.save();
+}
+
 userSchema.statics.findByTemporaryToken= function(tToken) {
   return this.findOne({'temporaryToken.value': tToken})
   .exec();

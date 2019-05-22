@@ -103,6 +103,7 @@ app.get('/google', (req, res, next) => {
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
   let state = (req.query.state && req.query.state !== '{}' ? JSON.parse(req.query.state) : {});
   state.success = (req.user.userId ? 'true' : 'false');
+  state.integration = 'google';
   state = JSON.stringify(state);
 
   User.findById(req.user.userId)
@@ -122,6 +123,7 @@ app.get('/linkedin', (req, res, next) => {
 app.get('/linkedin/callback', passport.authenticate('linkedin'), function(req, res, next){
   let state = (req.query.state && req.query.state !== '{}' ? JSON.parse(req.query.state) : {});
   state.success = (req.user.userId ? 'true' : 'false');
+  state.integration = 'linkedin';
   state = JSON.stringify(state);
 
   if(req.user.userId) {
