@@ -197,7 +197,10 @@ passport.use(new LinkedinStrategy({
 
               } else {
                 return currentLinkedinUser.linkUser(user)
-                  .then(() => generateTokens(user._id, client.clientId, req, done));
+                  .then(() => {
+                    user.linkLinkedinUser(currentLinkedinUser)
+                    .then(() => generateTokens(user._id, client.clientId, req, done));
+                  });
               }
 
             });
