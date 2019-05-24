@@ -15,6 +15,12 @@ let crypto = require('crypto');
 
 // @todo This method is declared 2 times
 let generateTokens = function (userId, clientId, request, done) {
+  if(!userId) {
+    let error = new Error("User not found.");
+    error.code = 404;
+    return done(error);
+  }
+
   let model = { userId: userId, clientId: clientId };
   let tokenValue = crypto.randomBytes(32).toString('hex');
   let refreshTokenValue = crypto.randomBytes(32).toString('hex');
@@ -171,13 +177,12 @@ passport.use(new LinkedinStrategy({
       .then(currentLinkedinUser => {
         //@TODO User can be already auth
 
-        if (currentLinkedinUser.user) {
+        return User.findOne({ _id: currentLinkedinUser.user })
+        .then(currentUser => {
 
-          // Classic SIGNIN
-          return User.findOne({ _id: currentLinkedinUser.user })
-            .then(currentUser => generateTokens(currentUser._id, client.clientId, req, done));
-
-        } else {
+          if(currentUser) {
+            return generateTokens(currentUser._id, client.clientId, req, done);
+          } else {
 
           // User with same email can already exists : we only fetch the main email address for the moment.
           User.findOneByEmailAsync(currentLinkedinUser.email)
@@ -205,7 +210,9 @@ passport.use(new LinkedinStrategy({
 
             });
 
-        }
+          }
+
+        });
 
       }).catch(error => { return done(error); });
   });
