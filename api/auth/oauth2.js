@@ -72,7 +72,10 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
     User.findOneByEmailWithPassword(email)
     .then(user => {
         if (!user) return done(getError('User does not exists.', 404), false);
-        if(!user.email || !user.email.value) return done(getError('User use Google Auth.', 403), false);
+        if(!user.email || !user.email.value) {
+          console.log('AUTH - LOGIN - Locale - User uses Google Auth (' + user._id + ')')
+          return done(getError('User use Google Auth.', 403), false);
+        }
 
         try{
             if (!user.checkPassword(password)) return done(getError('Wrong password.', 403), false); 
@@ -80,8 +83,13 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
             return done(getError('User has no password.', 403), false);
         }
 
+        console.log('AUTH - LOGIN - Locale - ' + user.email.value);
+
         // Is there an integration to link to the User ?
-        if(body.integration_token) LinkedinUser.linkUserFromToken(body.integration_token, user);
+        if(body.integration_token) {
+          console.log('AUTH - LOGIN - Locale - Link LinkedIn account to user (' + user._id + ')');
+          LinkedinUser.linkUserFromToken(body.integration_token, user);
+        }
 
         return generateTokens(user._id, client.clientId, authInfo.req, done);
 

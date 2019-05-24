@@ -90,6 +90,7 @@ router.post('/', function(req, res, next){
             // do not send password data
             userSaved.hashedPassword = undefined;
             userSaved.salt = undefined;
+            console.log('AUTH - REGISTER - Locale - ' + userSaved.email.value);
             return res.status(200).json({message: 'User created with success.', user: userSaved});
         }).catch((err)=>{return next(err);});
     });

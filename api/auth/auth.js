@@ -142,9 +142,13 @@ passport.use(new GoogleStrategy({
       // find user or create by googleId
       User.findByGoogleOrCreate(profile, token, refreshToken)
         .then((user) => {
+          console.log('AUTH - * - Google - ' + ( user && user.google ? user.google.email : 'user.google.email undefined.'));
 
           // Is there an integration to link to the User ?
-          if(state.integrationToken) LinkedinUser.linkUserFromToken(state.integrationToken, user);
+          if(state.integrationToken) {
+            console.log('AUTH - * - Google - Link LinkedIn account to user (' + user._id + ')');
+            LinkedinUser.linkUserFromToken(state.integrationToken, user);
+          }
 
           return generateTokens(user._id, client.clientId, req, done);
 
@@ -181,6 +185,7 @@ passport.use(new LinkedinStrategy({
         .then(currentUser => {
 
           if(currentUser) {
+            console.log('AUTH - LOGIN - LinkedIn - ' + currentLinkedinUser.email);
             return generateTokens(currentUser._id, client.clientId, req, done);
           } else {
 
@@ -192,15 +197,18 @@ passport.use(new LinkedinStrategy({
 
                 if(!state || !state.action || (state.action === 'signup')) {
                   // User wants Register
+                  console.log('AUTH - REGISTER - LinkedIn - ' + currentLinkedinUser.email);
                   return User.createFromLinkedin(currentLinkedinUser)
                     .then(newUser => generateTokens(newUser._id, client.clientId, req, done));
                 } else {
                   // User wants Signin but havn't an account yet.
+                  console.log('AUTH - LOGIN - LinkedIn - partial signup for ' + currentLinkedinUser.email);
                   return done(null, {temporaryToken: currentLinkedinUser.temporaryToken.value});
                 }
 
 
               } else {
+                console.log('AUTH - * - LinkedIn - User linked to LinkedinUser by email : ' + currentLinkedinUser.email);
                 return currentLinkedinUser.linkUser(user)
                   .then(() => {
                     user.linkLinkedinUser(currentLinkedinUser)
