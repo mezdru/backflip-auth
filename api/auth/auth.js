@@ -177,27 +177,30 @@ passport.use(new LinkedinStrategy({
           return User.findOne({ _id: currentLinkedinUser.user })
             .then(currentUser => generateTokens(currentUser._id, client.clientId, req, done));
 
-        } else if(!state || !state.action || (state.action === 'signup')) {
+        } else {
 
-          // Classic REGISTER
           // User with same email can already exists : we only fetch the main email address for the moment.
           User.findOneByEmailAsync(currentLinkedinUser.email)
             .then(user => {
 
               if (!user) {
-                return User.createFromLinkedin(currentLinkedinUser)
-                .then(newUser => generateTokens(newUser._id, client.clientId, req, done));
+
+                if(!state || !state.action || (state.action === 'signup')) {
+                  // User wants Register
+                  return User.createFromLinkedin(currentLinkedinUser)
+                    .then(newUser => generateTokens(newUser._id, client.clientId, req, done));
+                } else {
+                  // User wants Signin but havn't an account yet.
+                  return done(null, {temporaryToken: currentLinkedinUser.temporaryToken.value});
+                }
+
+
               } else {
                 return currentLinkedinUser.linkUser(user)
                   .then(() => generateTokens(user._id, client.clientId, req, done));
               }
 
             });
-
-        } else {
-
-          // User wants Sign In but haven't a LinkedIn account yet.
-          return done(null, {temporaryToken: currentLinkedinUser.temporaryToken.value});
 
         }
 
