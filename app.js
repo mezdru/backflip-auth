@@ -159,6 +159,10 @@ app.use('/password/reset', passwordReset);
 let apiLinkedin = require('./api/linkedin/api_linkedin');
 app.use('/api/linkedin', passport.authenticate('bearer', {session: false}), apiLinkedin);
 
+// API GOOGLE
+let apiGoogle = require('./api/google/api_google');
+app.use('/api/google', passport.authenticate('bearer', {session: false}), apiGoogle);
+
 // API INVITATION CODE
 let apiInvitationCode = require('./api/invitation/api_invitationCode');
 app.use('/api/invitation/code', passport.authenticate('bearer', {session: false}), apiInvitationCode);

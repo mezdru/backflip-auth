@@ -55,7 +55,8 @@ let userSchema = mongoose.Schema({
     generated: Date,
     userSession: {type: mongoose.Schema.Types.ObjectId, ref: 'UserSession', default: null}
   },
-  linkedinUser: {type: mongoose.Schema.Types.ObjectId, ref: 'LinkedinUser', default: null}
+  linkedinUser: {type: mongoose.Schema.Types.ObjectId, ref: 'LinkedinUser', default: null},
+  googleUser: {type: mongoose.Schema.Types.ObjectId, ref: 'GoogleUser', default: null}
 });
 
 // PASSWORD MANAGE
@@ -127,6 +128,11 @@ userSchema.methods.linkLinkedinUser = function(linkedinUser) {
   return this.save();
 }
 
+userSchema.methods.linkGoogleUser = function(googleUser) {
+  this.googleUser = googleUser;
+  return this.save();
+}
+
 userSchema.statics.findByTemporaryToken= function(tToken) {
   return this.findOne({'temporaryToken.value': tToken})
   .exec();
@@ -148,12 +154,34 @@ userSchema.statics.findOneByEmailWithPassword  = function (email) {
 };
 
 userSchema.statics.createFromLinkedin = function(linkedinUser) {
-  return (new User({ linkedinUser: linkedinUser, email: { value: linkedinUser.email, validated: true, normalized: User.normalizeEmail(linkedinUser.email) } })).save()
+  return (new User({ 
+    linkedinUser: linkedinUser, 
+    email: { 
+      value: linkedinUser.email, 
+      validated: true, 
+      normalized: User.normalizeEmail(linkedinUser.email) 
+    } 
+  })).save()
   .then(newUser => {
     return linkedinUser.linkUser(newUser)
       .then(() => {
         return newUser;
       });
+  });
+}
+
+userSchema.statics.createFromGoogle = function(googleUser) {
+  return (new User({
+    googleUser: googleUser,
+    email: {
+      value: googleUser.email,
+      validated: true,
+      normalized: User.normalizeEmail(googleUser.email)
+    }
+  })).save()
+  .then(newUser => {
+    return googleUser.linkUser(newUser)
+    .then(() => {return newUser;});
   });
 }
 

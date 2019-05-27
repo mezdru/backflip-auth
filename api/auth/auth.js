@@ -7,6 +7,7 @@ let GoogleStrategy = require('passport-google-oauth2').Strategy;
 let LinkedinStrategy = require('@sokratis/passport-linkedin-oauth2').Strategy;
 let User = require('../../models/user');
 let LinkedinUser = require('../../models/linkedinUser');
+let GoogleUser = require('../../models/googleUser');
 let ClientModel = require('../../models/tokenModels').ClientModel;
 let AccessTokenModel = require('../../models/tokenModels').AccessTokenModel;
 let RefreshTokenModel = require('../../models/tokenModels').RefreshTokenModel;
@@ -15,7 +16,7 @@ let crypto = require('crypto');
 
 // @todo This method is declared 2 times
 let generateTokens = function (userId, clientId, request, done) {
-  if(!userId) {
+  if (!userId) {
     let error = new Error("User not found.");
     error.code = 404;
     return done(error);
@@ -139,22 +140,67 @@ passport.use(new GoogleStrategy({
       if (!client) { return done(null, false); }
       if (client.clientSecret != process.env.DEFAULT_CLIENT_SECRET) { return done(null, false); }
 
+
+      GoogleUser.findByGoogleOrCreate(profile, token, refreshToken)
+        .then(currentGoogleUser => {
+
+          return User.findOne({ _id: currentGoogleUser.user })
+            .then(currentUser => {
+              if (currentUser) {
+                //     // Is there an integration to link to the User ?
+                if (state.integrationToken) {
+                  console.log('AUTH - * - Google - Link LinkedIn account to user (' + currentUser._id + ')');
+                  LinkedinUser.linkUserFromToken(state.integrationToken, currentUser);
+                }
+                console.log('AUTH - LOGIN - Google - ' + currentGoogleUser.email);
+                return generateTokens(currentUser._id, client.clientId, req, done);
+              } else {
+
+                User.findOneByEmailAsync(currentGoogleUser.email)
+                  .then(user => {
+
+                    if (!user) {
+                      console.log('AUTH - REGISTER - Google - ' + currentGoogleUser.email);
+                      return User.createFromGoogle(currentGoogleUser)
+                        .then(newUser => generateTokens(newUser._id, client.clientId, req, done));
+                    } else {
+                      //     // Is there an integration to link to the User ?
+                      if (state.integrationToken) {
+                        console.log('AUTH - * - Google - Link LinkedIn account to user (' + user._id + ')');
+                        LinkedinUser.linkUserFromToken(state.integrationToken, user);
+                      }
+                      console.log('AUTH - * - Google - User linked to GoogleUser by email : ' + currentGoogleUser.email);
+                      return currentGoogleUser.linkUser(user)
+                        .then(() => {
+                          user.linkGoogleUser(currentGoogleUser)
+                            .then(() => generateTokens(user._id, client.clientId, req, done));
+                        });
+                    }
+
+                  });
+              }
+            })
+        })
+
+
+
+
       // find user or create by googleId
-      User.findByGoogleOrCreate(profile, token, refreshToken)
-        .then((user) => {
-          console.log('AUTH - * - Google - ' + ( user && user.google ? user.google.email : 'user.google.email undefined.'));
+      // User.findByGoogleOrCreate(profile, token, refreshToken)
+      //   .then((user) => {
+      //     console.log('AUTH - * - Google - ' + ( user && user.google ? user.google.email : 'user.google.email undefined.'));
 
-          // Is there an integration to link to the User ?
-          if(state.integrationToken) {
-            console.log('AUTH - * - Google - Link LinkedIn account to user (' + user._id + ')');
-            LinkedinUser.linkUserFromToken(state.integrationToken, user);
-          }
+      //     // Is there an integration to link to the User ?
+      //     if(state.integrationToken) {
+      //       console.log('AUTH - * - Google - Link LinkedIn account to user (' + user._id + ')');
+      //       LinkedinUser.linkUserFromToken(state.integrationToken, user);
+      //     }
 
-          return generateTokens(user._id, client.clientId, req, done);
+      //     return generateTokens(user._id, client.clientId, req, done);
 
-        }).catch((error) => {
-          return done(error);
-        });
+      //   }).catch((error) => {
+      //     return done(error);
+      //   });
     });
   }
 ));
@@ -182,45 +228,45 @@ passport.use(new LinkedinStrategy({
         //@TODO User can be already auth
 
         return User.findOne({ _id: currentLinkedinUser.user })
-        .then(currentUser => {
+          .then(currentUser => {
 
-          if(currentUser) {
-            console.log('AUTH - LOGIN - LinkedIn - ' + currentLinkedinUser.email);
-            return generateTokens(currentUser._id, client.clientId, req, done);
-          } else {
+            if (currentUser) {
+              console.log('AUTH - LOGIN - LinkedIn - ' + currentLinkedinUser.email);
+              return generateTokens(currentUser._id, client.clientId, req, done);
+            } else {
 
-          // User with same email can already exists : we only fetch the main email address for the moment.
-          User.findOneByEmailAsync(currentLinkedinUser.email)
-            .then(user => {
+              // User with same email can already exists : we only fetch the main email address for the moment.
+              User.findOneByEmailAsync(currentLinkedinUser.email)
+                .then(user => {
 
-              if (!user) {
+                  if (!user) {
 
-                if(!state || !state.action || (state.action === 'signup')) {
-                  // User wants Register
-                  console.log('AUTH - REGISTER - LinkedIn - ' + currentLinkedinUser.email);
-                  return User.createFromLinkedin(currentLinkedinUser)
-                    .then(newUser => generateTokens(newUser._id, client.clientId, req, done));
-                } else {
-                  // User wants Signin but havn't an account yet.
-                  console.log('AUTH - LOGIN - LinkedIn - partial signup for ' + currentLinkedinUser.email);
-                  return done(null, {temporaryToken: currentLinkedinUser.temporaryToken.value});
-                }
+                    if (!state || !state.action || (state.action === 'signup')) {
+                      // User wants Register
+                      console.log('AUTH - REGISTER - LinkedIn - ' + currentLinkedinUser.email);
+                      return User.createFromLinkedin(currentLinkedinUser)
+                        .then(newUser => generateTokens(newUser._id, client.clientId, req, done));
+                    } else {
+                      // User wants Signin but havn't an account yet.
+                      console.log('AUTH - LOGIN - LinkedIn - partial signup for ' + currentLinkedinUser.email);
+                      return done(null, { temporaryToken: currentLinkedinUser.temporaryToken.value });
+                    }
 
 
-              } else {
-                console.log('AUTH - * - LinkedIn - User linked to LinkedinUser by email : ' + currentLinkedinUser.email);
-                return currentLinkedinUser.linkUser(user)
-                  .then(() => {
-                    user.linkLinkedinUser(currentLinkedinUser)
-                    .then(() => generateTokens(user._id, client.clientId, req, done));
-                  });
-              }
+                  } else {
+                    console.log('AUTH - * - LinkedIn - User linked to LinkedinUser by email : ' + currentLinkedinUser.email);
+                    return currentLinkedinUser.linkUser(user)
+                      .then(() => {
+                        user.linkLinkedinUser(currentLinkedinUser)
+                          .then(() => generateTokens(user._id, client.clientId, req, done));
+                      });
+                  }
 
-            });
+                });
 
-          }
+            }
 
-        });
+          });
 
       }).catch(error => { return done(error); });
   });
