@@ -185,44 +185,6 @@ userSchema.statics.createFromGoogle = function(googleUser) {
   });
 }
 
-userSchema.statics.findByGoogleOrCreate = function (profileGoogle, idToken, refreshToken){
-  return new Promise((resolve, reject) => {
-    User.findOneByEmail(this.normalizeEmail(profileGoogle.email), (err, user) => {
-      if(err) return reject(err);
-      let tokens = {id_token: idToken};
-      if(refreshToken) token.refresh_token = refreshToken;
-
-      if(user){
-        if(user.google.id === profileGoogle.id){
-          if(user.email && user.email.value && (user.email.value === profileGoogle.email) && !user.email.validated) user.email.validated = true;
-          return resolve(user.save());
-        } else {
-          // update user
-          user.google = {
-            id : profileGoogle.id, 
-            email: profileGoogle.email, 
-            hd: profileGoogle._json.domain,
-            normalized: this.normalizeEmail(profileGoogle.email),
-            tokens: tokens
-          }
-          if(user.email && user.email.value && (user.email.value === profileGoogle.email) && !user.email.validated) user.email.validated = true;
-          return resolve(user.save());
-        }
-      }else {
-        return resolve((new User({google: 
-          {
-            id : profileGoogle.id, 
-            email: profileGoogle.email, 
-            hd: profileGoogle._json.domain,
-            normalized: this.normalizeEmail(profileGoogle.email),
-            tokens: tokens
-          }})).save());
-      }
-    });
-  });
-}
-
-
 userSchema.statics.normalizeEmail = function(email) {
   return normalizeEmail(email,
     {

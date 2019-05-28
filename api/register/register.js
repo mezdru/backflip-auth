@@ -71,7 +71,7 @@ router.post('/', function(req, res, next){
  */
 router.post('/', function(req, res, next){
     User.findOneByEmail(req.body.email, function(err, user) {
-        if(err) return resWithError(err);
+        if(err) return next(err);
         if(user) return res.status(400).json({message: 'User already exists.'});
 
         let newUser = new User({
@@ -94,15 +94,6 @@ router.post('/', function(req, res, next){
             return res.status(200).json({message: 'User created with success.', user: userSaved});
         }).catch((err)=>{return next(err);});
     });
-});
-
-let resWithError = (err) => {
-    return res.status(500).json({message: 'Internal error', errors: [err]});
-};
-
-router.use(function(err, req, res, next){
-    if(err) return res.status(500).json({message: 'Internal error', errors: [err.message]});
-    return res.status(500).json({message: 'Unexpected error'});
 });
 
 module.exports = router;

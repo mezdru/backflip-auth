@@ -93,6 +93,12 @@ app.post('/locale/exchange', (req, res, next) => {
 app.use('/locale', oauth2.token);
 
 
+var buildStringState = (userId, queryState, integrationName) => {
+  let state = (queryState && queryState !== '{}' ? JSON.parse(queryState) : {});
+  state.success = (userId ? 'true' : 'false');
+  state.integration = integrationName;
+  return JSON.stringify(state);
+}
 
 
 // Google OAuth
@@ -101,10 +107,7 @@ app.get('/google', (req, res, next) => {
 });
 
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
-  let state = (req.query.state && req.query.state !== '{}' ? JSON.parse(req.query.state) : {});
-  state.success = (req.user.userId ? 'true' : 'false');
-  state.integration = 'google';
-  state = JSON.stringify(state);
+  let state = buildStringState(req.user.userId, req.query.state, 'google');
 
   User.findById(req.user.userId)
   .then((user) => {
@@ -113,18 +116,13 @@ app.get('/google/callback', passport.authenticate('google'), function(req, res, 
 });
 
 
-
-
 // Linkedin OAuth
 app.get('/linkedin', (req, res, next) => {
   return passport.authenticate('linkedin', { scope: ['r_liteprofile', 'r_emailaddress'] , state: req.query.state})(req, res, next);
 });
 
 app.get('/linkedin/callback', passport.authenticate('linkedin'), function(req, res, next){
-  let state = (req.query.state && req.query.state !== '{}' ? JSON.parse(req.query.state) : {});
-  state.success = (req.user.userId ? 'true' : 'false');
-  state.integration = 'linkedin';
-  state = JSON.stringify(state);
+  let state = buildStringState(req.user.userId, req.query.state, 'linkedin');
 
   if(req.user.userId) {
     User.findById(req.user.userId)
@@ -136,8 +134,6 @@ app.get('/linkedin/callback', passport.authenticate('linkedin'), function(req, r
   }
 
 });
-
-
 
 
 // Register
@@ -176,6 +172,7 @@ app.use(function(req, res, next) {
 
 // generic error setter
 app.use(function(err, req, res, next) {
+
   res.locals.error = err || {};
   res.locals.status = (err.status || 500);
   res.locals.error.date = new Date().toISOString();
@@ -183,12 +180,7 @@ app.use(function(err, req, res, next) {
   // During early Beta log verbose 500 errors to Heroku console
   if (res.locals.status >= 500) console.error(err);
 
-  next(err);
-});
-
-// generic error handler
-app.use(function(err, req, res, next) {
-  return res.status(err.status || 500).json(err);
+  return res.status(err.status || 500).json({message: err.message || err, date: res.locals.error.date});
 });
 
 module.exports = app;
