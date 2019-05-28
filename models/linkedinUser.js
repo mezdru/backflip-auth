@@ -32,14 +32,15 @@ LinkedinUserSchema.methods.login = function() {
   return this.save();
 }
 
-LinkedinUserSchema.methods.linkUser = function(user){
-  this.user = user;
-  this.temporaryToken = {
-    value: null,
-    generated: Date.now()
-  };
-  return this.save();
-}
+// LinkedinUserSchema.methods.linkUser = function(user){
+//   this.user = user;
+//   this.temporaryToken = {
+//     value: null,
+//     generated: Date.now()
+//   };
+//   return this.save();
+// }
+
 LinkedinUserSchema.statics.linkUserFromToken = function(temporaryToken, user) {
   return LinkedinUser.findOne({'temporaryToken.value': temporaryToken})
   .then(linkedinUser => {
@@ -83,6 +84,8 @@ LinkedinUserSchema.pre('save', function(next) {
   return next();
 });
 
+var LinkUserPlugin = require('./plugins/linkUser.plugin');
+LinkedinUserSchema.plugin(LinkUserPlugin);
 var LinkedinUser = mongoose.model('LinkedinUser', LinkedinUserSchema);
 
 let getLinkedinEmail = (profile) => {

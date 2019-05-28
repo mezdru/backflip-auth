@@ -38,14 +38,14 @@ GoogleUserSchema.methods.login = function() {
   return this.save();
 }
 
-GoogleUserSchema.methods.linkUser = function(user) {
-  this.user = user;
-  this.temporaryToken = {
-    value: null,
-    generated: Date.now()
-  };
-  return this.save();
-}
+// GoogleUserSchema.methods.linkUser = function(user) {
+//   this.user = user;
+//   this.temporaryToken = {
+//     value: null,
+//     generated: Date.now()
+//   };
+//   return this.save();
+// }
 
 GoogleUserSchema.methods.linkUserFromToken = function(temporaryToken, user) {
   return GoogleUser.findOne({'temporaryToken.value': temporaryToken})
@@ -93,6 +93,8 @@ GoogleUserSchema.pre('save', function(next) {
   return next();
 });
 
+var LinkUserPlugin = require('./plugins/linkUser.plugin');
+GoogleUserSchema.plugin(LinkUserPlugin);
 var GoogleUser = mongoose.model('GoogleUser', GoogleUserSchema);
 
 module.exports = GoogleUser;
