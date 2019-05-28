@@ -10,9 +10,4 @@ router.get('', (req, res, next) => {
     }).catch(err => {return next(err)});
 });
 
-router.use(function(err, req, res, next){
-    if(err) return res.status(500).json({message: 'Internal error', errors: [err.message]});
-    return res.status(500).json({message: 'Unexpected error'});
-});
-
 module.exports = router;
