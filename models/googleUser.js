@@ -87,14 +87,11 @@ GoogleUserSchema.statics.findByGoogleOrCreate = async (profileGoogle, accessToke
   });
 }
 
-
-GoogleUserSchema.pre('save', function(next) {
-  this.updated = Date.now();
-  return next();
-});
-
 var LinkUserPlugin = require('./plugins/linkUser.plugin');
+var LastUpdatedPlugin = require('./plugins/lastUpdated.plugin');
 GoogleUserSchema.plugin(LinkUserPlugin);
+GoogleUserSchema.plugin(LastUpdatedPlugin);
+
 var GoogleUser = mongoose.model('GoogleUser', GoogleUserSchema);
 
 module.exports = GoogleUser;

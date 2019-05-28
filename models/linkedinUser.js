@@ -79,13 +79,11 @@ LinkedinUserSchema.statics.findByLinkedinOrCreate = async (profileLinkedin, acce
   });
 }
 
-LinkedinUserSchema.pre('save', function(next) {
-  this.updated = Date.now();
-  return next();
-});
-
 var LinkUserPlugin = require('./plugins/linkUser.plugin');
+var LastUpdatedPlugin = require('./plugins/lastUpdated.plugin');
 LinkedinUserSchema.plugin(LinkUserPlugin);
+LinkedinUserSchema.plugin(LastUpdatedPlugin);
+
 var LinkedinUser = mongoose.model('LinkedinUser', LinkedinUserSchema);
 
 let getLinkedinEmail = (profile) => {

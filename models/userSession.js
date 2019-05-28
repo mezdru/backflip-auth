@@ -33,10 +33,8 @@ UserSessionSchema.methods.updateAccessToken = function(aTokenId, uAgent) {
   return this.save();
 };
 
-UserSessionSchema.pre('save', function(next) {
-  this.updated = Date.now();
-  return next();
-});
+var LastUpdatedPlugin = require('./plugins/lastUpdated.plugin');
+UserSessionSchema.plugin(LastUpdatedPlugin);
 
 var UserSession = mongoose.model('UserSession', UserSessionSchema);
 

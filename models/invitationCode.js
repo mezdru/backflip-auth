@@ -1,6 +1,4 @@
 let mongoose = require('mongoose');
-let User = require('./user');
-let Organisation = require('./organisation');
 var randomstring = require('randomstring');
 
 var InvitationCodeSchema = mongoose.Schema({
@@ -28,7 +26,6 @@ InvitationCodeSchema.statics.validateCode = function(code, orgId, newUser) {
   return InvitationCode.findOne({code: code, organisation: orgId})
   .then(invitationCode => {
     if(!invitationCode) return false;
-    console.log(invitationCode)
     // check valid until
     if( invitationCode.valid_until.getTime() < (new Date()).getTime() ) return false;
 
@@ -47,12 +44,8 @@ InvitationCodeSchema.statics.validateCode = function(code, orgId, newUser) {
   }).catch(() => {return false;})
 }
 
-
-
-InvitationCodeSchema.pre('save', function(next) {
-  this.updated = Date.now();
-  return next();
-});
+var LastUpdatedPlugin = require('./plugins/lastUpdated.plugin');
+InvitationCodeSchema.plugin(LastUpdatedPlugin);
 
 var InvitationCode = mongoose.model('InvitationCode', InvitationCodeSchema);
 

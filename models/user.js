@@ -244,6 +244,9 @@ function getId(subObject) {
   return subObject._id || subObject;
 }
 
+var LastUpdatedPlugin = require('./plugins/lastUpdated.plugin');
+userSchema.plugin(LastUpdatedPlugin);
+
 var User = mongoose.model('User', userSchema);
 
 module.exports = User;
