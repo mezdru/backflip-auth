@@ -97,7 +97,7 @@ app.use('/locale', oauth2.token);
 
 // Google OAuth
 app.get('/google', (req, res, next) => {
-  return passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email'], state: req.query.state})(req, res);
+  return passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email', 'https://www.googleapis.com/auth/admin.directory.user.readonly'], state: req.query.state})(req, res);
 });
 
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){

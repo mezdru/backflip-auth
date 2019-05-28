@@ -130,7 +130,8 @@ passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: process.env.GOOGLE_REDIRECT_URI,
-  passReqToCallback: true
+  passReqToCallback: true,
+  scope: ['profile','email', 'https://www.googleapis.com/auth/admin.directory.user.readonly']
 },
   (req, token, refreshToken, profile, done) => {
     let state = (req.query.state ? JSON.parse(req.query.state) : {});
@@ -139,7 +140,6 @@ passport.use(new GoogleStrategy({
       if (err) { return done(err); }
       if (!client) { return done(null, false); }
       if (client.clientSecret != process.env.DEFAULT_CLIENT_SECRET) { return done(null, false); }
-
 
       GoogleUser.findByGoogleOrCreate(profile, token, refreshToken)
         .then(currentGoogleUser => {
