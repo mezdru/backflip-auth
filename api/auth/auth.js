@@ -181,26 +181,6 @@ passport.use(new GoogleStrategy({
               }
             })
         })
-
-
-
-
-      // find user or create by googleId
-      // User.findByGoogleOrCreate(profile, token, refreshToken)
-      //   .then((user) => {
-      //     console.log('AUTH - * - Google - ' + ( user && user.google ? user.google.email : 'user.google.email undefined.'));
-
-      //     // Is there an integration to link to the User ?
-      //     if(state.integrationToken) {
-      //       console.log('AUTH - * - Google - Link LinkedIn account to user (' + user._id + ')');
-      //       LinkedinUser.linkUserFromToken(state.integrationToken, user);
-      //     }
-
-      //     return generateTokens(user._id, client.clientId, req, done);
-
-      //   }).catch((error) => {
-      //     return done(error);
-      //   });
     });
   }
 ));
