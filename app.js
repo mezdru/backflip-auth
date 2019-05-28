@@ -97,7 +97,7 @@ app.use('/locale', oauth2.token);
 
 // Google OAuth
 app.get('/google', (req, res, next) => {
-  return passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email'], state: req.query.state})(req, res);
+  return passport.authenticate('google', { prompt: 'select_account', scope: ['profile','email', 'https://www.googleapis.com/auth/admin.directory.user.readonly'], state: req.query.state})(req, res);
 });
 
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
@@ -158,6 +158,10 @@ app.use('/password/reset', passwordReset);
 // API LINKEDIN
 let apiLinkedin = require('./api/linkedin/api_linkedin');
 app.use('/api/linkedin', passport.authenticate('bearer', {session: false}), apiLinkedin);
+
+// API GOOGLE
+let apiGoogle = require('./api/google/api_google');
+app.use('/api/google', passport.authenticate('bearer', {session: false}), apiGoogle);
 
 // API INVITATION CODE
 let apiInvitationCode = require('./api/invitation/api_invitationCode');
