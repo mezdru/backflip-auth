@@ -15,7 +15,7 @@ let UserSession = require('../../models/userSession');
 let crypto = require('crypto');
 
 // @todo This method is declared 2 times
-let generateTokens = function (userId, clientId, request, done) {
+let generateTokens = function (userId, integrationState, clientId, request, done) {
   if (!userId) {
     let error = new Error("User not found.");
     error.code = 404;
@@ -51,7 +51,7 @@ let generateTokens = function (userId, clientId, request, done) {
                   };
                   user.save()
                     .then(() => {
-                      return done(null, { access_token: tokenValue, refresh_token: refreshTokenValue, userId: userId });
+                      return done(null, { access_token: tokenValue, refresh_token: refreshTokenValue, userId: userId, integrationState: integrationState });
                     }).catch((err) => done(err));
                 }).catch((err) => done(err));
 
@@ -141,6 +141,8 @@ passport.use(new GoogleStrategy({
       if (!client) { return done(null, false); }
       if (client.clientSecret != process.env.DEFAULT_CLIENT_SECRET) { return done(null, false); }
 
+      let integrationState = {linkedin: 'false'};
+
       GoogleUser.findByGoogleOrCreate(profile, token, refreshToken)
         .then(currentGoogleUser => {
 
@@ -151,9 +153,10 @@ passport.use(new GoogleStrategy({
                 if (state.integrationToken) {
                   console.log('AUTH - * - Google - Link LinkedIn account to user (' + currentUser._id + ')');
                   LinkedinUser.linkUserFromToken(state.integrationToken, currentUser);
+                  integrationState.linkedin = 'true';
                 }
                 console.log('AUTH - LOGIN - Google - ' + currentGoogleUser.email);
-                return generateTokens(currentUser._id, client.clientId, req, done);
+                return generateTokens(currentUser._id, integrationState, client.clientId, req, done);
               } else {
 
                 User.findOneByEmailAsync(currentGoogleUser.email)
@@ -162,18 +165,19 @@ passport.use(new GoogleStrategy({
                     if (!user) {
                       console.log('AUTH - REGISTER - Google - ' + currentGoogleUser.email);
                       return User.createFromGoogle(currentGoogleUser)
-                        .then(newUser => generateTokens(newUser._id, client.clientId, req, done));
+                        .then(newUser => generateTokens(newUser._id, integrationState, client.clientId, req, done));
                     } else {
                       //     // Is there an integration to link to the User ?
                       if (state.integrationToken) {
                         console.log('AUTH - * - Google - Link LinkedIn account to user (' + user._id + ')');
                         LinkedinUser.linkUserFromToken(state.integrationToken, user);
+                        integrationState.linkedin = 'true';
                       }
                       console.log('AUTH - * - Google - User linked to GoogleUser by email : ' + currentGoogleUser.email);
                       return currentGoogleUser.linkUser(user)
                         .then(() => {
                           user.linkGoogleUser(currentGoogleUser)
-                            .then(() => generateTokens(user._id, client.clientId, req, done));
+                            .then(() => generateTokens(user._id, integrationState, client.clientId, req, done));
                         });
                     }
 
@@ -212,7 +216,7 @@ passport.use(new LinkedinStrategy({
 
             if (currentUser) {
               console.log('AUTH - LOGIN - LinkedIn - ' + currentLinkedinUser.email);
-              return generateTokens(currentUser._id, client.clientId, req, done);
+              return generateTokens(currentUser._id, null, client.clientId, req, done);
             } else {
 
               // User with same email can already exists : we only fetch the main email address for the moment.
@@ -225,7 +229,7 @@ passport.use(new LinkedinStrategy({
                       // User wants Register
                       console.log('AUTH - REGISTER - LinkedIn - ' + currentLinkedinUser.email);
                       return User.createFromLinkedin(currentLinkedinUser)
-                        .then(newUser => generateTokens(newUser._id, client.clientId, req, done));
+                        .then(newUser => generateTokens(newUser._id, null, client.clientId, req, done));
                     } else {
                       // User wants Signin but havn't an account yet.
                       console.log('AUTH - LOGIN - LinkedIn - partial signup for ' + currentLinkedinUser.email);
@@ -238,7 +242,7 @@ passport.use(new LinkedinStrategy({
                     return currentLinkedinUser.linkUser(user)
                       .then(() => {
                         user.linkLinkedinUser(currentLinkedinUser)
-                          .then(() => generateTokens(user._id, client.clientId, req, done));
+                          .then(() => generateTokens(user._id, null, client.clientId, req, done));
                       });
                   }
 

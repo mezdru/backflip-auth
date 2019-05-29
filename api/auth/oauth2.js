@@ -33,7 +33,7 @@ let LinkedinUser            = require('../../models/linkedinUser');
 let server = oauth2orize.createServer();
 
 // @todo This method is declared 2 times
-let generateTokens = function(userId, clientId, request, done){
+let generateTokens = function(userId, integrationState, clientId, request, done){
     let model = {userId: userId, clientId: clientId};
     let tokenValue = crypto.randomBytes(32).toString('hex');
     let refreshTokenValue = crypto.randomBytes(32).toString('hex');
@@ -54,7 +54,7 @@ let generateTokens = function(userId, clientId, request, done){
         };
         (new UserSession(userSession)).save()
         .then(() => {
-          return done(null, tokenValue, refreshTokenValue, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT});
+          return done(null, tokenValue, refreshTokenValue, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT, 'integrationState': integrationState});
         }).catch((err) => done(err));
       }).catch((err) => done(err));
     }).catch((err) => done(err));
@@ -85,13 +85,16 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
 
         console.log('AUTH - LOGIN - Locale - ' + user.email.value);
 
+        let integrationState = {linkedin: 'false'};
+
         // Is there an integration to link to the User ?
         if(body.integration_token) {
           console.log('AUTH - LOGIN - Locale - Link LinkedIn account to user (' + user._id + ')');
           LinkedinUser.linkUserFromToken(body.integration_token, user);
+          integrationState.linkedin = 'true';
         }
 
-        return generateTokens(user._id, client.clientId, authInfo.req, done);
+        return generateTokens(user._id, integrationState, client.clientId, authInfo.req, done);
 
     }).catch(err =>  done(err));
 }));

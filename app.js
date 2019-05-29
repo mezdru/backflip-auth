@@ -93,10 +93,11 @@ app.post('/locale/exchange', (req, res, next) => {
 app.use('/locale', oauth2.token);
 
 
-var buildStringState = (userId, queryState, integrationName) => {
+var buildStringState = (user, queryState, integrationName) => {
   let state = (queryState && queryState !== '{}' ? JSON.parse(queryState) : {});
-  state.success = (userId ? 'true' : 'false');
+  state.success = (user.userId ? 'true' : 'false');
   state.integration = integrationName;
+  state.integrationState = user.integrationState;
   return JSON.stringify(state);
 }
 
@@ -107,7 +108,7 @@ app.get('/google', (req, res, next) => {
 });
 
 app.get('/google/callback', passport.authenticate('google'), function(req, res, next){
-  let state = buildStringState(req.user.userId, req.query.state, 'google');
+  let state = buildStringState(req.user, req.query.state, 'google');
 
   User.findById(req.user.userId)
   .then((user) => {
@@ -122,7 +123,7 @@ app.get('/linkedin', (req, res, next) => {
 });
 
 app.get('/linkedin/callback', passport.authenticate('linkedin'), function(req, res, next){
-  let state = buildStringState(req.user.userId, req.query.state, 'linkedin');
+  let state = buildStringState(req.user, req.query.state, 'linkedin');
 
   if(req.user.userId) {
     User.findById(req.user.userId)
