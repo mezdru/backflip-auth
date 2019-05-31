@@ -95,9 +95,9 @@ app.use('/locale', oauth2.token);
 
 var buildStringState = (user, queryState, integrationName) => {
   let state = (queryState && queryState !== '{}' ? JSON.parse(queryState) : {});
-  state.success = (user.userId ? 'true' : 'false');
+  state.success = (user && user.userId ? 'true' : 'false');
   state.integration = integrationName;
-  state.integrationState = user.integrationState;
+  if(user && user.integrationState) state.integrationState = user.integrationState
   return JSON.stringify(state);
 }
 
