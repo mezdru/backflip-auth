@@ -94,6 +94,9 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
           integrationState.linkedin = 'true';
         }
 
+        // update user last_login
+        user.login().then().catch(e => console.log(e));
+
         return generateTokens(user._id, integrationState, client.clientId, authInfo.req, done);
 
     }).catch(err =>  done(err));
