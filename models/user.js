@@ -133,6 +133,11 @@ userSchema.methods.linkGoogleUser = function(googleUser) {
   return this.save();
 }
 
+userSchema.methods.login = function() {
+  this.last_login = Date.now();
+  return this.save();
+}
+
 userSchema.statics.findByTemporaryToken= function(tToken) {
   return this.findOne({'temporaryToken.value': tToken})
   .exec();

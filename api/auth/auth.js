@@ -149,13 +149,14 @@ passport.use(new GoogleStrategy({
           return User.findOne({ _id: currentGoogleUser.user })
             .then(currentUser => {
               if (currentUser) {
-                //     // Is there an integration to link to the User ?
+                // Is there an integration to link to the User ?
                 if (state.integrationToken) {
                   console.log('AUTH - * - Google - Link LinkedIn account to user (' + currentUser._id + ')');
                   LinkedinUser.linkUserFromToken(state.integrationToken, currentUser);
                   integrationState.linkedin = 'true';
                 }
                 console.log('AUTH - LOGIN - Google - ' + currentGoogleUser.email);
+                currentUser.login().then().catch(e => console.log(e));
                 return generateTokens(currentUser._id, integrationState, client.clientId, req, done);
               } else {
 
@@ -174,6 +175,7 @@ passport.use(new GoogleStrategy({
                         integrationState.linkedin = 'true';
                       }
                       console.log('AUTH - * - Google - User linked to GoogleUser by email : ' + currentGoogleUser.email);
+                      user.login().then().catch(e => console.log(e));
                       return currentGoogleUser.linkUser(user)
                         .then(() => {
                           user.linkGoogleUser(currentGoogleUser)
@@ -216,6 +218,7 @@ passport.use(new LinkedinStrategy({
 
             if (currentUser) {
               console.log('AUTH - LOGIN - LinkedIn - ' + currentLinkedinUser.email);
+              currentUser.login().then().catch(e => console.log(e));
               return generateTokens(currentUser._id, null, client.clientId, req, done);
             } else {
 
@@ -239,6 +242,7 @@ passport.use(new LinkedinStrategy({
 
                   } else {
                     console.log('AUTH - * - LinkedIn - User linked to LinkedinUser by email : ' + currentLinkedinUser.email);
+                    user.login().then().catch(e => console.log(e));
                     return currentLinkedinUser.linkUser(user)
                       .then(() => {
                         user.linkLinkedinUser(currentLinkedinUser)
