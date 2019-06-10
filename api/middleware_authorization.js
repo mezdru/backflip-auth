@@ -7,7 +7,7 @@ var Organisation = require('../models/organisation');
  */
 
 router.use((req, res, next) => {
-	req.organisationId = req.body.orgId || (req.filter && req.filter.organisation ? req.filter.organisation : null);
+	req.organisationId = req.body.orgId || (req.query && req.query.organisation ? req.query.organisation : null);
 	next();
 });
 
