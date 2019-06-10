@@ -6,13 +6,8 @@ var Organisation = require('../models/organisation');
  * @description Authorize access to organisation
  */
 
-router.use('/organisation/:orgId', (req, res, next) => {
-	req.organisationId = req.params.orgId;
-	next();
-});
-
 router.use((req, res, next) => {
-	if(!req.organisationId) req.organisationId = req.body.orgId;
+	req.organisationId = req.body.orgId || (req.filter && req.filter.organisation ? req.filter.organisation : null);
 	next();
 });
 

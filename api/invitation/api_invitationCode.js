@@ -14,8 +14,25 @@ router.post('', authorization, (req, res, next) => {
 
 /**
  * @description Fetch invitation code used by current User in organisation provided.
+ * @filter organisation : required (id of the organisation)
  */
-router.get('/organisation/:orgId/byAccess', authorization, (req, res, next) => {
+router.get('/:id?', authorization, (req, res, next) => {
+  if(req.params.id) {
+    InvitationCode.findOne({_id : req.params.id, organisation: req.organisation._id})
+    .then(invitationCode => {
+      if(!invitationCode) return res.status(404).json({message: 'Invitation code not found.'});
+      return res.status(200).json({message: 'Invitation code fetched with success.', invitationCode: invitationCode});
+    }).catch(e => next(e));
+  } else if (req.organisation && req.filter.userAction === 'access') {
+    InvitationCode.findOne({organisation: req.organisation._id, 'access.user': req.user._id})
+    .then(invitationCode => {
+      if(!invitationCode) return res.status(404).json({message: 'Invitation code not found.'});
+      return res.status(200).json({message: 'Invitation code fetched with success.', invitationCode: invitationCode});
+    }).catch(e => next(e));
+  }
+
+
+
   InvitationCode.findOne({organisation: req.organisation._id, 'access.user': req.user._id})
   .then(invitationCode => {
     if(!invitationCode) return res.status(404).json({message: 'Invitation code not found.'});
