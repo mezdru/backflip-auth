@@ -12,4 +12,15 @@ router.post('', authorization, (req, res, next) => {
   }).catch(e => {return next(e);});
 });
 
+/**
+ * @description Fetch invitation code used by current User in organisation provided.
+ */
+router.get('/organisation/:orgId/byAccess', authorization, (req, res, next) => {
+  InvitationCode.findOne({organisation: req.organisation._id, 'access.user': req.user._id})
+  .then(invitationCode => {
+    if(!invitationCode) return res.status(404).json({message: 'Invitation code not found.'});
+    return res.status(200).json({message: 'Invitation code fetched with success.', invitationCode: invitationCode});
+  }).catch(e => next(e));
+});
+
 module.exports = router;

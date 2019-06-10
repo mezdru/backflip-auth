@@ -6,8 +6,17 @@ var Organisation = require('../models/organisation');
  * @description Authorize access to organisation
  */
 
+router.use('/organisation/:orgId', (req, res, next) => {
+	req.organisationId = req.params.orgId;
+	next();
+});
+
 router.use((req, res, next) => {
-	req.organisationId = req.body.orgId;
+	if(!req.organisationId) req.organisationId = req.body.orgId;
+	next();
+});
+
+router.use((req, res, next) => {
 	if (!req.organisationId) return res.status(422).json({ message: 'Missing parameter, could not retrieve organisation Id.' });
 	next();
 });
