@@ -7,7 +7,11 @@ var Organisation = require('../models/organisation');
  */
 
 router.use((req, res, next) => {
-	req.organisationId = req.body.orgId;
+	req.organisationId = req.body.orgId || (req.query && req.query.organisation ? req.query.organisation : null);
+	next();
+});
+
+router.use((req, res, next) => {
 	if (!req.organisationId) return res.status(422).json({ message: 'Missing parameter, could not retrieve organisation Id.' });
 	next();
 });
