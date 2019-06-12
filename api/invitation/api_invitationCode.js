@@ -23,6 +23,7 @@ router.get('/:id?', authorization, (req, res, next) => {
       if(!invitationCode) return res.status(404).json({message: 'Invitation code not found.'});
       return res.status(200).json({message: 'Invitation code fetched with success.', invitationCode: invitationCode});
     }).catch(e => next(e));
+    
   } else if (req.organisation && req.query.userAction === 'access') {
     InvitationCode.findOne({organisation: req.organisation._id, 'access.user': req.user._id})
     .then(invitationCode => {
