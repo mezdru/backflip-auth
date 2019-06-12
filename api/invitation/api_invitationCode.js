@@ -30,14 +30,6 @@ router.get('/:id?', authorization, (req, res, next) => {
       return res.status(200).json({message: 'Invitation code fetched with success.', invitationCode: invitationCode});
     }).catch(e => next(e));
   }
-
-
-
-  InvitationCode.findOne({organisation: req.organisation._id, 'access.user': req.user._id})
-  .then(invitationCode => {
-    if(!invitationCode) return res.status(404).json({message: 'Invitation code not found.'});
-    return res.status(200).json({message: 'Invitation code fetched with success.', invitationCode: invitationCode});
-  }).catch(e => next(e));
 });
 
 module.exports = router;
