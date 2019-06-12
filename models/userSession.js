@@ -2,7 +2,7 @@ let mongoose = require('mongoose');
 
 // Client
 var UserSessionSchema = mongoose.Schema({
-  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
+  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   accessToken: {type: mongoose.Schema.Types.ObjectId, ref: 'AccessToken'},
   refreshToken: {type: mongoose.Schema.Types.ObjectId, ref: 'RefreshToken', required: true},
   clientId: {type: String, required: true},

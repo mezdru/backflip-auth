@@ -87,7 +87,10 @@ app.post('/locale/exchange', (req, res, next) => {
 });
 
 
-
+// OAuth for Clients
+app.post('/accessToken', passport.authenticate(['basic', 'oauth2-client-password'], { session: false }), (req, res, next) => {
+  return res.status(200).json({message: 'AccessToken fetched with success.', accessToken: req.user.access_token});
+} );
 
 // Locale OAuth
 app.use('/locale', oauth2.token);
@@ -166,6 +169,7 @@ app.use('/api/invitation/code', passport.authenticate('bearer', {session: false}
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
+  console.log(req.originalUrl + ' not found.');
   var err = new Error('Not Found');
   err.status = 404;
   next(err);
