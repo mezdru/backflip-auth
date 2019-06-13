@@ -56,7 +56,10 @@ let generateTokens = function (userId, integrationState, clientId, request, done
 
             }).catch((err) => done(err));
         }).catch((err) => done(err));
-    }).catch((err) => done(err));
+    }).catch((err) => {
+      console.log(err);
+      return done(err)
+    });
 }
 
 // responsible of Client strategy, for client which supports HTTP Basic authentication (required)
@@ -78,7 +81,7 @@ passport.use(new ClientPasswordStrategy(
       if (err) { return done(err); }
       if (!client) { return done(null, false); }
       if (client.clientSecret != clientSecret) { return done(null, false); }
-      return generateTokens(null, null, client.clientId, null, done)
+      return done(null, client);
     });
   }
 ));

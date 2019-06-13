@@ -86,13 +86,7 @@ app.post('/locale/exchange', (req, res, next) => {
 
 });
 
-
-// OAuth for Clients
-app.post('/accessToken', passport.authenticate(['basic', 'oauth2-client-password'], { session: false }), (req, res, next) => {
-  return res.status(200).json({message: 'AccessToken fetched with success.', accessToken: req.user.access_token});
-} );
-
-// Locale OAuth
+// Locale OAuth (for Users & Clients)
 app.use('/locale', oauth2.token);
 
 
