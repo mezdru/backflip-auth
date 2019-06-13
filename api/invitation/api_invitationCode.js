@@ -7,8 +7,6 @@ router.post('', authorization, (req, res, next) => {
   var orgId = req.organisation._id;
   var newInvitationCode = req.body.invitationCode;
 
-  console.log(newInvitationCode)
-
   if(!newInvitationCode) {
     InvitationCode.createInvitationCode(req.user, orgId)
     .then(invitationCode => {
