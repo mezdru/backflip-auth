@@ -39,6 +39,7 @@ let generateTokens = function(userId, integrationState, clientId, request, done)
     let refreshTokenValue = crypto.randomBytes(32).toString('hex');
 
     model.token = refreshTokenValue;
+
     (new RefreshTokenModel(model)).save()
     .then((refreshToken) => {
       model.token = tokenValue;
@@ -68,7 +69,8 @@ let getError = (message, code) => {
 
 // Exchange username & password for an access token.
 // This is in case of Login, we should call this after user is created for a person
-server.exchange(oauth2orize.exchange.password(function(client, email, password, scope, body, authInfo, done) { 
+server.exchange(oauth2orize.exchange.password(function(client, email, password, scope, body, authInfo, done) {
+
     User.findOneByEmailWithPassword(email)
     .then(user => {
         if (!user) return done(getError('User does not exists.', 404), false);
@@ -100,6 +102,12 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
         return generateTokens(user._id, integrationState, client.clientId, authInfo.req, done);
 
     }).catch(err =>  done(err));
+}));
+
+// Auth for Clients
+server.exchange(oauth2orize.exchange.clientCredentials( function (client, scope, body, authInfo, done) {
+  console.log('AUTH - LOGIN - Locale - Client auth: '+client.clientId);
+  return generateTokens(null, null, client.clientId, authInfo.req, done);
 }));
 
 

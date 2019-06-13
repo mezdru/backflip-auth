@@ -16,11 +16,6 @@ let crypto = require('crypto');
 
 // @todo This method is declared 2 times
 let generateTokens = function (userId, integrationState, clientId, request, done) {
-  if (!userId) {
-    let error = new Error("User not found.");
-    error.code = 404;
-    return done(error);
-  }
 
   let model = { userId: userId, clientId: clientId };
   let tokenValue = crypto.randomBytes(32).toString('hex');
@@ -37,12 +32,13 @@ let generateTokens = function (userId, integrationState, clientId, request, done
             refreshToken: refreshToken._id,
             clientId: clientId,
             user: userId,
-            userAgent: request.headers['user-agent'],
-            userIP: request.headers['x-forwarded-for'] || request.connection.remoteAddress
+            userAgent: (request ? request.headers['user-agent'] : null),
+            userIP: (request ? request.headers['x-forwarded-for'] || request.connection.remoteAddress : null)
           };
           (new UserSession(userSession)).save()
             .then((userSessionObject) => {
-              User.findById(userId)
+              if(userId) {
+                User.findById(userId)
                 .then((user) => {
                   user.temporaryToken = {
                     value: crypto.randomBytes(32).toString('hex'),
@@ -54,10 +50,16 @@ let generateTokens = function (userId, integrationState, clientId, request, done
                       return done(null, { access_token: tokenValue, refresh_token: refreshTokenValue, userId: userId, integrationState: integrationState });
                     }).catch((err) => done(err));
                 }).catch((err) => done(err));
+              } else {
+                return done(null, { access_token: tokenValue, refresh_token: refreshTokenValue });
+              }
 
             }).catch((err) => done(err));
         }).catch((err) => done(err));
-    }).catch((err) => done(err));
+    }).catch((err) => {
+      console.log(err);
+      return done(err)
+    });
 }
 
 // responsible of Client strategy, for client which supports HTTP Basic authentication (required)
@@ -67,7 +69,6 @@ passport.use(new BasicStrategy(
       if (err) { return done(err); }
       if (!client) { return done(null, false); }
       if (client.clientSecret != password) { return done(null, false); }
-
       return done(null, client);
     });
   }
@@ -105,12 +106,21 @@ passport.use(new BearerStrategy({ passReqToCallback: true }, function (req, acce
           }
 
           // token not expired
-          User.findById(userSession.user, function (err, user) {
-            if (err) return done(err);
-            if (!user) return done(null, false, { message: 'Unknown user' });
-            var info = { scope: '*' };
-            done(null, user, info);
-          });
+          if(userSession.user) {
+            // User try to access
+            User.findById(userSession.user, function (err, user) {
+              if (err) return done(err);
+              if (!user) return done(null, false, { message: 'Unknown user' });
+              var info = { scope: '*' };
+              done(null, user, info);
+            });
+          } else {
+            // Client try to access
+            ClientModel.findOne({'clientId': userSession.clientId})
+            .then(client => {
+              return done(null, client, {scope: '*'});
+            });
+          }
 
         }).catch(err => done(err));
     }).catch(err => done(err));

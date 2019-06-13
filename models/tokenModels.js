@@ -22,7 +22,7 @@ var ClientModel = mongoose.model('Client', Client);
 
 // AccessToken
 var AccessToken = mongoose.Schema({
-    userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
+    userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     clientId: {
         type: String,
         required: true
@@ -42,7 +42,7 @@ var AccessTokenModel = mongoose.model('AccessToken', AccessToken);
 
 // RefreshToken
 var RefreshToken = mongoose.Schema({
-    userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
+    userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     clientId: {
         type: String,
         required: true
