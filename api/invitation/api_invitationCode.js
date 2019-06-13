@@ -5,11 +5,23 @@ var authorization = require('../middleware_authorization');
 
 router.post('', authorization, (req, res, next) => {
   var orgId = req.organisation._id;
-  if(!orgId) return res.status(422).json({message: 'Missing parameter'});
-  InvitationCode.createInvitationCode(req.user, orgId)
-  .then(invitationCode => {
-    return res.status(200).json({message: 'Invitation code created with success.', invitationCode: invitationCode});
-  }).catch(e => {return next(e);});
+  var newInvitationCode = req.body.invitationCode;
+
+  console.log(newInvitationCode)
+
+  if(!newInvitationCode) {
+    InvitationCode.createInvitationCode(req.user, orgId)
+    .then(invitationCode => {
+      return res.status(200).json({message: 'Invitation code created with success.', invitationCode: invitationCode});
+    }).catch(e => {return next(e);});
+  } else {
+    InvitationCode.createInvitationCode(newInvitationCode.creator, newInvitationCode.organisation)
+    .then(invitationCode => {
+      return res.status(200).json({message: 'Invitation code created with success.', invitationCode: invitationCode});
+    }).catch(e => {return next(e);});
+  }
+
+
 });
 
 /**

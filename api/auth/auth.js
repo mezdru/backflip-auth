@@ -103,12 +103,21 @@ passport.use(new BearerStrategy({ passReqToCallback: true }, function (req, acce
           }
 
           // token not expired
-          User.findById(userSession.user, function (err, user) {
-            if (err) return done(err);
-            if (!user) return done(null, false, { message: 'Unknown user' });
-            var info = { scope: '*' };
-            done(null, user, info);
-          });
+          if(userSession.user) {
+            // User try to access
+            User.findById(userSession.user, function (err, user) {
+              if (err) return done(err);
+              if (!user) return done(null, false, { message: 'Unknown user' });
+              var info = { scope: '*' };
+              done(null, user, info);
+            });
+          } else {
+            // Client try to access
+            ClientModel.findOne({'clientId': userSession.clientId})
+            .then(client => {
+              return done(null, client, {scope: '*'});
+            });
+          }
 
         }).catch(err => done(err));
     }).catch(err => done(err));
