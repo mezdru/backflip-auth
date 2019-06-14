@@ -7,7 +7,6 @@ exports.superadminOnly = async (req, res, next) => {
 // User who owns the resource only
 exports.resUserOwnOnly = async (req, res, next) => {
   var resData = req.backflipAuth;
-  console.log(resData)
 
   if(req.user.superadmin || (resData.owner && resData.owner.equals(req.user._id)))
     return res.status(resData.status).json({message: resData.message, data: resData.data})

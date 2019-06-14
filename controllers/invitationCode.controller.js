@@ -38,8 +38,8 @@ exports.getSingleInvitationCode = async (req, res, next) => {
 }
 
 exports.getInvitationCodes = async (req, res, next) => {
-  if (req.organisation && req.query.userAction === 'access') {
-    InvitationCode.find({organisation: req.organisation._id, 'access.user': req.user._id})
+  if (req.organisation && req.query.accessor) {
+    InvitationCode.find({organisation: req.organisation._id, 'access.user': req.query.accessor})
     .then(invitationCodes => {
 
       if(invitationCodes.length === 0) {
