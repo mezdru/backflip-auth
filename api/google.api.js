@@ -1,0 +1,22 @@
+var express = require('express');
+var router = express.Router();
+var GoogleUserController = require('../controllers/googleUser.controller');
+var Authorization = require('./authorization');
+var passport = require('passport');
+
+router.get(
+  '/:id', 
+  passport.authenticate('bearer', {session: false}),
+  GoogleUserController.getSingleGoogleUser,
+  Authorization.resUserOwnOnly
+)
+
+router.get(
+  '', 
+  passport.authenticate('bearer', {session: false}),
+  Authorization.superadminOnly, 
+  GoogleUserController.getGoogleUsers,
+  Authorization.resWithData
+)
+
+module.exports = router;
