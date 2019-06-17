@@ -6,7 +6,6 @@ exports.superadminOnly = async (req, res, next) => {
 
 // Superadmin OR Client with matching scope
 exports.superadminOrClient = async (req, res, next) => {
-  console.log('EH')
   if(req.user.superadmin) return next();
   if(req.user.clientId && req.user.scope.find(scopeElt => scopeElt === req.backflipAuth.resource.model)) return next();
   return response403(res);
@@ -31,9 +30,10 @@ exports.resWithData = async (req, res, next) => {
 exports.adminOnly = async (req, res, next) => {
   if(req.user.superadmin) return next();
 
-  var orgAndRecord = req.user.orgsAndRecords.find(orgAndRecord => orgAndRecord.organisation.equals(req.organisation._id));
-
-  if(orgAndRecord.admin) return next();
+  if(req.user.orgsAndRecords) {
+    var orgAndRecord = req.user.orgsAndRecords.find(orgAndRecord => orgAndRecord.organisation.equals(req.organisation._id));
+    if(orgAndRecord.admin) return next();
+  }
 
   return response403(res);
 }

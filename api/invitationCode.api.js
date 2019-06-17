@@ -13,7 +13,6 @@ router.use((req, res, next) => {
     model: RESOURCE_MODEL
   }
 
-  console.log(req.backflipAuth)
   next();
 });
 
