@@ -4,6 +4,14 @@ exports.superadminOnly = async (req, res, next) => {
   return response403(res);
 }
 
+// Superadmin OR Client with matching scope
+exports.superadminOrClient = async (req, res, next) => {
+  console.log('EH')
+  if(req.user.superadmin) return next();
+  if(req.user.clientId && req.user.scope.find(scopeElt => scopeElt === req.backflipAuth.resource.model)) return next();
+  return response403(res);
+}
+
 // User who owns the resource only
 exports.resUserOwnOnly = async (req, res, next) => {
   var resData = req.backflipAuth;
@@ -16,7 +24,7 @@ exports.resUserOwnOnly = async (req, res, next) => {
 
 exports.resWithData = async (req, res, next) => {
   var resData = req.backflipAuth;
-  return res.status(resData.status).json({message: resData.message, data: resData.data})
+  return res.status(resData.status || 200).json({message: resData.message, data: resData.data})
 }
 
 // Admin of the organisation only

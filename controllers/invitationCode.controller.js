@@ -13,7 +13,7 @@ exports.createInvitationCode = async (req, res, next) => {
 
     }).catch(e => {return next(e);});
   } else {
-    InvitationCode.createInvitationCode(newInvitationCode.creator, newInvitationCode.organisation)
+    InvitationCode.createInvitationCode(newInvitationCode.creator || req.user, newInvitationCode.organisation)
     .then(invitationCode => {
 
       req.backflipAuth = {message: 'Invitation code created with success.', status: 200, data: invitationCode, owner: invitationCode.creator};
@@ -51,6 +51,14 @@ exports.getInvitationCodes = async (req, res, next) => {
 
     }).catch(e => next(e));
   } else {
-    next();
+    InvitationCode.find()
+    .then(invitationCodes => {
+      if(invitationCodes.length === 0) {
+        req.backflipAuth = {message: 'Invitation codes not found', status: 404};
+      } else {
+        req.backflipAuth = {message: 'Invitation codes fetched with success.', status: 200, data: invitationCodes};
+      }
+      return next();
+    }).catch(e => next(e));
   }
 }

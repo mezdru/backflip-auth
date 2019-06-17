@@ -5,6 +5,18 @@ var AuthorizationOrg = require('./middleware_authorization');
 var Authorization = require('./authorization');
 var passport = require('passport');
 
+const RESOURCE_MODEL = 'invitationCode';
+
+router.use((req, res, next) => {
+  req.backflipAuth = req.backflipAuth || {};
+  req.backflipAuth.resource = {
+    model: RESOURCE_MODEL
+  }
+
+  console.log(req.backflipAuth)
+  next();
+});
+
 router.post(
   '/',
   passport.authenticate('bearer', {session: false}),
@@ -25,7 +37,7 @@ router.get(
   '/', 
   passport.authenticate('bearer', {session: false}),
   AuthorizationOrg, 
-  Authorization.superadminOnly, 
+  Authorization.superadminOrClient, 
   InvitationCodeController.getInvitationCodes,
   Authorization.resWithData
 )
