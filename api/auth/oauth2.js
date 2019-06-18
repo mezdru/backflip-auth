@@ -32,41 +32,6 @@ let LinkedinUser            = require('../../models/linkedinUser');
 // create OAuth 2.0 server
 let server = oauth2orize.createServer();
 
-// @todo This method is declared 2 times
-let generateTokens = function(userId, integrationState, clientId, request, done){
-    let model = {userId: userId, clientId: clientId};
-    let tokenValue = crypto.randomBytes(32).toString('hex');
-    let refreshTokenValue = crypto.randomBytes(32).toString('hex');
-
-    model.token = refreshTokenValue;
-
-    (new RefreshTokenModel(model)).save()
-    .then((refreshToken) => {
-      model.token = tokenValue;
-      (new AccessTokenModel(model)).save()
-      .then((accessToken) => {
-        let userSession = {
-          accessToken: accessToken._id,
-          refreshToken: refreshToken._id,
-          clientId: clientId,
-          user: userId,
-          userAgent: request.headers['user-agent'],
-          userIP: request.headers['x-forwarded-for'] || request.connection.remoteAddress
-        };
-        (new UserSession(userSession)).save()
-        .then(() => {
-          return done(null, tokenValue, refreshTokenValue, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT, 'integrationState': integrationState});
-        }).catch((err) => done(err));
-      }).catch((err) => done(err));
-    }).catch((err) => done(err));
-}
-
-let getError = (message, code) => {
-  let error = new Error(message);
-  error.status = code;
-  return error;
-}
-
 // Exchange username & password for an access token.
 // This is in case of Login, we should call this after user is created for a person
 server.exchange(oauth2orize.exchange.password(function(client, email, password, scope, body, authInfo, done) {
@@ -107,7 +72,24 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
 // Auth for Clients
 server.exchange(oauth2orize.exchange.clientCredentials( function (client, scope, body, authInfo, done) {
   console.log('AUTH - LOGIN - Locale - Client auth: '+client.clientId);
-  return generateTokens(null, null, client.clientId, authInfo.req, done);
+
+  let error;
+
+  // scope validation
+  if(client.clientId !== process.env.DEFAULT_CLIENT_ID) {
+    if( scope && scope.length > 0 &&  arrayContainsArray(client.scope, scope)) {
+      return generateTokens(null, null, client.clientId, authInfo.req, done);
+    } else if(scope && scope.length > 0 ){
+      error = new Error("Scope not authorized.");
+      error.status = 403;
+    } else {
+      error = new Error("Scope missing.");
+      error.status = 403;
+    }
+
+    return done(error);
+  }
+
 }));
 
 
@@ -144,3 +126,58 @@ exports.token = [
     server.token(),
     server.errorHandler()
 ]
+
+// utils 
+
+/**
+ * Returns TRUE if the first specified array contains all elements
+ * from the second one. FALSE otherwise.
+ *
+ * @param {array} superset
+ * @param {array} subset
+ *
+ * @returns {boolean}
+ */
+let arrayContainsArray = function(superset, subset) {
+  if (0 === subset.length) {
+    return false;
+  }
+  return subset.every(function (value) {
+    return (superset.indexOf(value) >= 0);
+  });
+}
+
+// @todo This method is declared 2 times
+let generateTokens = function(userId, integrationState, clientId, request, done){
+  let model = {userId: userId, clientId: clientId};
+  let tokenValue = crypto.randomBytes(32).toString('hex');
+  let refreshTokenValue = crypto.randomBytes(32).toString('hex');
+
+  model.token = refreshTokenValue;
+
+  (new RefreshTokenModel(model)).save()
+  .then((refreshToken) => {
+    model.token = tokenValue;
+    (new AccessTokenModel(model)).save()
+    .then((accessToken) => {
+      let userSession = {
+        accessToken: accessToken._id,
+        refreshToken: refreshToken._id,
+        clientId: clientId,
+        user: userId,
+        userAgent: request.headers['user-agent'],
+        userIP: request.headers['x-forwarded-for'] || request.connection.remoteAddress
+      };
+      (new UserSession(userSession)).save()
+      .then(() => {
+        return done(null, tokenValue, refreshTokenValue, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT, 'integrationState': integrationState});
+      }).catch((err) => done(err));
+    }).catch((err) => done(err));
+  }).catch((err) => done(err));
+}
+
+let getError = (message, code) => {
+let error = new Error(message);
+error.status = code;
+return error;
+}

@@ -150,16 +150,16 @@ let passwordReset = require('./api/password/password');
 app.use('/password/reset', passwordReset);
 
 // API LINKEDIN
-let apiLinkedin = require('./api/linkedin/api_linkedin');
-app.use('/api/linkedin', passport.authenticate('bearer', {session: false}), apiLinkedin);
+let apiLinkedin = require('./api/linkedin.api');
+app.use('/api/linkedinUsers', apiLinkedin);
 
 // API GOOGLE
-let apiGoogle = require('./api/google/api_google');
-app.use('/api/google', passport.authenticate('bearer', {session: false}), apiGoogle);
+let apiGoogle = require('./api/google.api');
+app.use('/api/googleUsers', apiGoogle);
 
 // API INVITATION CODE
-let apiInvitationCode = require('./api/invitation/api_invitationCode');
-app.use('/api/invitation/code', passport.authenticate('bearer', {session: false}), apiInvitationCode);
+let apiInvitationCode = require('./api/invitationCode.api');
+app.use('/api/invitationCodes', apiInvitationCode);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

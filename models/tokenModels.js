@@ -15,7 +15,10 @@ var Client = mongoose.Schema({
     clientSecret: {
         type: String,
         required: true
-    }
+    },
+    scope: [
+        String
+    ]
 });
 
 var ClientModel = mongoose.model('Client', Client);
@@ -35,7 +38,10 @@ var AccessToken = mongoose.Schema({
     created: {
         type: Date,
         default: Date.now
-    }
+    },
+    scope: [
+        String
+    ]
 });
 
 var AccessTokenModel = mongoose.model('AccessToken', AccessToken);
