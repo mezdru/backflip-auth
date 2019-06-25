@@ -7,6 +7,7 @@ let passport = require('passport');
 const RESOURCE_MODEL = 'linkedinUser';
 
 router.use((req, res, next) => {
+  req.backflipAuth = req.backflipAuth || {};
   req.backflipAuth.resource = {
     model: RESOURCE_MODEL
   }

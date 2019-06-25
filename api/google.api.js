@@ -8,6 +8,7 @@ const RESOURCE_MODEL = 'googleUser';
 
 
 router.use((req, res, next) => {
+  req.backflipAuth = req.backflipAuth || {};
   req.backflipAuth.resource = {
     model: RESOURCE_MODEL
   }
