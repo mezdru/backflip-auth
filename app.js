@@ -45,6 +45,13 @@ if (app.get('env') === 'production') {
   });
 }
 
+// Generic logging
+var morgan = require('morgan');
+morgan.token('fullurl', function getFullUrl(req) {
+  return req.hostname + req.originalUrl;
+});
+app.use(morgan(':method :fullurl :status - :res[content-length] b in :response-time ms'));
+
 
 // Init passport
 app.use(passport.initialize());

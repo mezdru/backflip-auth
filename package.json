@@ -33,6 +33,7 @@
     "mongodb": "^2.2.24",
     "mongoose": "^5.3.4",
     "mongoose-delete": "^0.3.4",
+    "morgan": "^1.9.1",
     "oauth2orize": "^1.11.0",
     "passport": "^0.4.0",
     "passport-google-oauth2": "^0.1.6",
