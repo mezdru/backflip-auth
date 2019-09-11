@@ -50,7 +50,7 @@ var morgan = require('morgan');
 morgan.token('fullurl', function getFullUrl(req) {
   return req.hostname + req.originalUrl;
 });
-app.use(morgan(':method :fullurl :status - :res[content-length] b in :response-time ms'));
+app.use(morgan(':method :fullurl :status - :res[content-length] b in :response-time ms (referrer = :referrer)'));
 
 
 // Init passport
