@@ -37,7 +37,7 @@ router.use((req, res, next) => {
 
 router.use((req, res, next) => {
 	if (!req.user || (req.user.email && req.user.email.value && !req.user.email.validated))
-		return res.status(403).json({ message: 'Email not validated', email: req.user.email.value });
+		return res.status(403).json({ message: 'Email not validated', email: (req.user ? req.user.email.value : null) });
 	next();
 });
 
