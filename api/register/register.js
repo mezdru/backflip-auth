@@ -22,7 +22,6 @@ const { sanitizeBody } = require('express-validator/filter');
 let dumbPasswords = require('dumb-passwords');
 let User = require('../../models/user');
 var md5 = require('md5');
-const rateLimit = require('express-rate-limit');
 
 /**
  * @description Checking the parameters

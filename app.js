@@ -180,7 +180,7 @@ app.use(function(req, res, next) {
 app.use(function(err, req, res, next) {
 
   res.locals.error = err || {};
-  res.locals.status = (err.status || 500);
+  res.locals.status = ( (err ? err.status : null) || 500);
   res.locals.error.date = new Date().toISOString();
 
   // During early Beta log verbose 500 errors to Heroku console
