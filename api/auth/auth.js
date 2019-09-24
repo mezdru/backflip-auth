@@ -13,9 +13,10 @@ let AccessTokenModel = require('../../models/tokenModels').AccessTokenModel;
 let RefreshTokenModel = require('../../models/tokenModels').RefreshTokenModel;
 let UserSession = require('../../models/userSession');
 let crypto = require('crypto');
+let ConnectionLog = require('../../models/connectionLog');
 
 // @todo This method is declared 2 times
-let generateTokens = function (userId, integrationState, clientId, request, done) {
+let generateTokens = function (userId, integrationState, clientId, request, authType, done) {
 
   let model = { userId: userId, clientId: clientId };
   let tokenValue = crypto.randomBytes(32).toString('hex');
@@ -37,6 +38,7 @@ let generateTokens = function (userId, integrationState, clientId, request, done
           };
           (new UserSession(userSession)).save()
             .then((userSessionObject) => {
+              ConnectionLog.createFromRequest(request, userId, userId, authType);
               if(userId) {
                 User.findById(userId)
                 .then((user) => {
@@ -167,7 +169,7 @@ passport.use(new GoogleStrategy({
                 }
                 console.log('AUTH - LOGIN - Google - ' + currentGoogleUser.email);
                 currentUser.login().then().catch(e => console.log(e));
-                return generateTokens(currentUser._id, integrationState, client.clientId, req, done);
+                return generateTokens(currentUser._id, integrationState, client.clientId, req, 'google', done);
               } else {
 
                 User.findOneByEmailAsync(currentGoogleUser.email)
@@ -176,7 +178,7 @@ passport.use(new GoogleStrategy({
                     if (!user) {
                       console.log('AUTH - REGISTER - Google - ' + currentGoogleUser.email);
                       return User.createFromGoogle(currentGoogleUser)
-                        .then(newUser => generateTokens(newUser._id, integrationState, client.clientId, req, done));
+                        .then(newUser => generateTokens(newUser._id, integrationState, client.clientId, req, 'google', done));
                     } else {
                       //     // Is there an integration to link to the User ?
                       if (state.integrationToken) {
@@ -189,7 +191,7 @@ passport.use(new GoogleStrategy({
                       return currentGoogleUser.linkUser(user)
                         .then(() => {
                           user.linkGoogleUser(currentGoogleUser)
-                            .then(() => generateTokens(user._id, integrationState, client.clientId, req, done));
+                            .then(() => generateTokens(user._id, integrationState, client.clientId, req, 'google', done));
                         });
                     }
 
@@ -229,7 +231,7 @@ passport.use(new LinkedinStrategy({
             if (currentUser) {
               console.log('AUTH - LOGIN - LinkedIn - ' + currentLinkedinUser.email);
               currentUser.login().then().catch(e => console.log(e));
-              return generateTokens(currentUser._id, null, client.clientId, req, done);
+              return generateTokens(currentUser._id, null, client.clientId, req, 'linkedin', done);
             } else {
 
               // User with same email can already exists : we only fetch the main email address for the moment.
@@ -242,7 +244,7 @@ passport.use(new LinkedinStrategy({
                       // User wants Register
                       console.log('AUTH - REGISTER - LinkedIn - ' + currentLinkedinUser.email);
                       return User.createFromLinkedin(currentLinkedinUser)
-                        .then(newUser => generateTokens(newUser._id, null, client.clientId, req, done));
+                        .then(newUser => generateTokens(newUser._id, null, client.clientId, req, 'linkedin', done));
                     } else {
                       // User wants Signin but havn't an account yet.
                       console.log('AUTH - LOGIN - LinkedIn - partial signup for ' + currentLinkedinUser.email);
@@ -256,7 +258,7 @@ passport.use(new LinkedinStrategy({
                     return currentLinkedinUser.linkUser(user)
                       .then(() => {
                         user.linkLinkedinUser(currentLinkedinUser)
-                          .then(() => generateTokens(user._id, null, client.clientId, req, done));
+                          .then(() => generateTokens(user._id, null, client.clientId, req, 'linkedin', done));
                       });
                   }
 
