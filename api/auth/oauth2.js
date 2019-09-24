@@ -28,6 +28,7 @@ let AccessTokenModel        = require('../../models/tokenModels').AccessTokenMod
 let RefreshTokenModel       = require('../../models/tokenModels').RefreshTokenModel;
 let UserSession             = require('../../models/userSession');
 let LinkedinUser            = require('../../models/linkedinUser');
+let ConnectionLog           = require('../../models/connectionLog');
 
 // create OAuth 2.0 server
 let server = oauth2orize.createServer();
@@ -63,6 +64,8 @@ server.exchange(oauth2orize.exchange.password(function(client, email, password, 
 
         // update user last_login
         user.login().then().catch(e => console.log(e));
+
+        ConnectionLog.createFromRequest(authInfo.req, user._id, user._id, 'locale');
 
         return generateTokens(user._id, integrationState, client.clientId, authInfo.req, done);
 
@@ -108,6 +111,7 @@ server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken,
         userSession.updateAccessToken(aToken, authInfo.req.headers['user-agent'])
         .then(() => {
           AccessTokenModel.deleteOne({'_id': oldAccessTokenId}).exec();
+          ConnectionLog.createFromRequest(authInfo.req, userSession.user, userSession.user, 'refresh token');
           return done(null, aToken.token, {'expires_in': process.env.DEFAULT_TOKEN_TIMEOUT});
         }).catch(err => done(err));
       }).catch(err => done(err));
