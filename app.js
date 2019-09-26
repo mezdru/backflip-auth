@@ -168,6 +168,9 @@ app.use('/api/googleUsers', apiGoogle);
 let apiInvitationCode = require('./api/invitationCode.api');
 app.use('/api/invitationCodes', apiInvitationCode);
 
+let apiConnectionLog = require('./api/connectionLog.api');
+app.use('/api/connectionLogs', apiConnectionLog);
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   console.log(req.originalUrl + ' not found.');
