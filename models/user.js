@@ -12,7 +12,9 @@ let userSchema = mongoose.Schema({
       record: {type: mongoose.Schema.Types.ObjectId, ref: 'Record', default: null},
       admin: Boolean,
       monthly: { type: Boolean, default: true },
-      welcomed: { type: Boolean, default: false }
+      welcomed: { type: Boolean, default: false }, // name issue : welcomed should be a date
+      created: {type: Date, default: null},
+      welcomed_date: {type: Date, default: null},
     }
   ],
   google: {
@@ -117,7 +119,7 @@ userSchema.methods.attachOrgAndRecord = function(organisation, record, callback)
   if (orgAndRecord && record) {
     orgAndRecord.record = record;
   } else if (!orgAndRecord) {
-    this.orgsAndRecords.push({organisation: organisation, record: record});
+    this.orgsAndRecords.push({organisation: organisation, record: record, created: Date.now()});
   }
   if (callback) this.save(callback);
   else return this;
