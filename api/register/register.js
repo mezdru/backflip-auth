@@ -22,6 +22,7 @@ const { sanitizeBody } = require('express-validator/filter');
 let dumbPasswords = require('dumb-passwords');
 let User = require('../../models/user');
 var md5 = require('md5');
+var KeenHelper = require('../../helpers/keen_helper');
 
 /**
  * @description Checking the parameters
@@ -89,6 +90,11 @@ router.post('/', function(req, res, next){
             // do not send password data
             userSaved.hashedPassword = undefined;
             userSaved.salt = undefined;
+
+            KeenHelper.recordMasterEvent('signup', {
+                userEmitter: userSaved._id
+            });
+
             console.log('AUTH - REGISTER - Locale - ' + userSaved.email.value);
             return res.status(200).json({message: 'User created with success.', user: userSaved});
         }).catch((err)=>{return next(err);});

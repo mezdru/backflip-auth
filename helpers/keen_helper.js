@@ -25,6 +25,16 @@ class KeenHelper {
     }).catch(e => {console.log(e); return null;});
   }
 
+  async recordMasterEvent(eventFamily, object) {
+    const clientKeenTracking = new KeenTracking({
+      projectId: process.env.KEEN_PROJECT_ID,
+      writeKey: process.env.KEEN_WRITES_KEY
+    });
+    return await clientKeenTracking.recordEvent(eventFamily, {
+      item: object
+    }).catch(e => {console.log(e); return null;});
+  }
+
   async findOrCreateAccessKey(orgId, type, isPublic) {
     let org = (isPublic ?
       await Organisation.findOne({_id: orgId, public: isPublic}).catch(e => null) :

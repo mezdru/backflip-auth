@@ -1,6 +1,7 @@
 let mongoose = require('mongoose');
 let ua = require('ua-parser');
 const iplocation = require("iplocation").default;
+let KeenHelper = require('../helpers/keen_helper');
 
 var ConnectionLogSchema = mongoose.Schema({
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
@@ -31,7 +32,12 @@ ConnectionLogSchema.statics.createFromRequest = async function(req, userId, owne
     location: await getLocationByIp(ip),
     type: connectionType,
     requestUrl: req.headers['Referer']
-  })).save();
+  })).save().then(connectLogSaved => {
+    KeenHelper.recordMasterEvent('signin', {
+      userEmitter: userId,
+      connectionLog: connectLogSaved
+    });
+  });
 }
 
 var ConnectionLog = mongoose.model('ConnectionLog', ConnectionLogSchema);
