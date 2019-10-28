@@ -71,7 +71,7 @@ GoogleUserSchema.statics.findByGoogleOrCreate = async (profileGoogle, accessToke
       return (new GoogleUser({
         googleId: profileGoogle.id,
         name: profileGoogle.displayName,
-        email: profileGoogle.email,
+        email: profileGoogle.email || profileGoogle.emails[0].value,
         emails: profileGoogle.emails,
         pictures: profileGoogle.photos,
         accessToken: accessToken,
