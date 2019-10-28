@@ -22,61 +22,65 @@ var express = require('express');
 var router = express.Router();
 var Organisation = require('../../models/organisation');
 var InvitationCode = require('../../models/invitationCode');
+let KeenHelper = require('../../helpers/keen_helper');
 
 /**
  * @description Try to find Organisation by tag provided.
  */
-router.post('/:orgId/:invitationCode?', function(req, res, next) {
-    Organisation.findOne({'_id' : req.params.orgId})
-    .then(organisation => {
-        if(!organisation) return res.status(404).json({message: 'Organisation not found.'});
-        res.locals.organisation = organisation;
-        return next();
-    }).catch((err)=>{return next(err);});
+router.post('/:orgId/:invitationCode?', function (req, res, next) {
+    Organisation.findOne({ '_id': req.params.orgId })
+        .then(organisation => {
+            if (!organisation) return res.status(404).json({ message: 'Organisation not found.' });
+            res.locals.organisation = organisation;
+            return next();
+        }).catch((err) => { return next(err); });
 });
 
 /**
  * @description User can access organisation if one of the three check is passed.
  */
-router.post('/:orgId/:invitationCode?', function(req, res, next) {    
+router.post('/:orgId/:invitationCode?', function (req, res, next) {
     // when user is invited, he is already registered in the organisation
     if (req.user.belongsToOrganisation(res.locals.organisation._id)) {
-        return res.status(200).json({message: 'User already registered in Organisation.', organisation: res.locals.organisation, user: req.user});
+        return res.status(200).json({ message: 'User already registered in Organisation.', organisation: res.locals.organisation, user: req.user });
     }
 
     // User try to access with a code
     if (req.params.invitationCode) {
 
         InvitationCode.validateCode(req.params.invitationCode, res.locals.organisation._id, req.user)
-        .then(isCodeValid => {
-            if(isCodeValid) {
-                req.user.attachOrgAndRecord(res.locals.organisation, null);
-                next();
-            } else {
-                return res.status(403).json({message: 'Invitation expired'});
-            }
-        }).catch((e) => {next(e);})
+            .then(isCodeValid => {
+                if (isCodeValid) {
+                    req.user.attachOrgAndRecord(res.locals.organisation, null);
+                    next();
+                } else {
+                    return res.status(403).json({ message: 'Invitation expired' });
+                }
+            }).catch((e) => { next(e); })
 
-    }else{
+    } else {
         // Email domains access
-        if(res.locals.organisation.isInDomain(req.user) || req.user.isSuperAdmin()) {
+        if (res.locals.organisation.isInDomain(req.user) || req.user.isSuperAdmin()) {
             req.user.attachOrgAndRecord(res.locals.organisation, null);
             next();
-        }else{
-            return res.status(403).json({message: 'User can\'t access the Organisation.'});
+        } else {
+            return res.status(403).json({ message: 'User can\'t access the Organisation.' });
         }
     }
-    
-});  
+
+});
 
 /**
  * @description Save User with Organisation linked.
  */
-router.post('/:orgTag/:invitationCode?', function(req, res, next) {
+router.post('/:orgTag/:invitationCode?', function (req, res, next) {
     req.user.save()
-    .then(() => {
-        return res.status(200).json({message: 'User registered in organisation.', organisation: res.locals.organisation, user: req.user});
-    }).catch((err)=>{return next(err);});
+        .then(() => {
+            KeenHelper.recordEvent('userAttached', {
+                userEmitter: req.user._id
+            }, res.locals.organisation._id || res.locals.organisation);
+            return res.status(200).json({ message: 'User registered in organisation.', organisation: res.locals.organisation, user: req.user });
+        }).catch((err) => { return next(err); });
 });
 
 module.exports = router;
