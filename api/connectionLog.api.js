@@ -16,6 +16,13 @@ router.use((req, res, next) => {
 });
 
 router.get(
+  '/me/latest',
+  passport.authenticate('bearer', {session: false}),
+  ConnectionLogController.getLatestConnection,
+  Authorization.resUserOwnOnly
+)
+
+router.get(
   '/', 
   passport.authenticate('bearer', {session: false}),
   Authorization.superadminOrClient, 
