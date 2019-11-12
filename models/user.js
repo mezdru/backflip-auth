@@ -47,6 +47,7 @@ let userSchema = mongoose.Schema({
   ],
   last_login: { type: Date },
   last_action: {type: Date},
+  last_access: {type: Date},
   created: { type: Date, default: Date.now },
   updated: { type: Date, default: Date.now },
   superadmin: Boolean,
@@ -138,6 +139,14 @@ userSchema.methods.linkGoogleUser = function(googleUser) {
 userSchema.methods.login = function() {
   this.last_login = Date.now();
   return this.save();
+}
+
+userSchema.statics.accessApp = function(userId) {
+  return User.findOne({_id: userId})
+  .then(user => {
+    user.last_access = Date.now();
+    user.save();
+  })
 }
 
 userSchema.statics.findByTemporaryToken= function(tToken) {
