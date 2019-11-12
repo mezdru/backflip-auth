@@ -2,6 +2,7 @@ let mongoose = require('mongoose');
 let ua = require('ua-parser');
 const iplocation = require("iplocation").default;
 let KeenHelper = require('../helpers/keen_helper');
+let User = require('../models/user');
 
 var ConnectionLogSchema = mongoose.Schema({
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
@@ -16,6 +17,9 @@ var ConnectionLogSchema = mongoose.Schema({
 });
 
 ConnectionLogSchema.statics.createFromRequest = async function(req, userId, ownerId, connectionType) {
+
+  User.accessApp(userId);
+
   var ip = (req.headers['x-forwarded-for'] || '').split(',').pop() || 
             req.connection.remoteAddress || 
             req.socket.remoteAddress || 
