@@ -19,7 +19,7 @@ router.get(
   '/me/latest',
   passport.authenticate('bearer', {session: false}),
   ConnectionLogController.getLatestConnection,
-  Authorization.resUserOwnOnly
+  Authorization.resWithData
 )
 
 router.get(

@@ -20,6 +20,6 @@ exports.getLatestConnection = async (req, res, next) => {
   var TenMinutesAgo = new Date( Date.now() - 1000 * 60 * 10 );
   let connectionLog = await ConnectionLog.findOne({user: req.user._id, created: {$lt: TenMinutesAgo}}).sort({created: -1}).catch(e => null);
 
-  req.backflipAuth = {status: 200, message: 'Latest connection log found.', data: connectionLog, owner: connectionLog.user};
+  req.backflipAuth = {status: 200, message: 'Latest connection log found.', data: connectionLog};
   return next();
 }
