@@ -54,7 +54,7 @@ router.post('/:orgId/:invitationCode?', function (req, res, next) {
                     req.user.attachOrgAndRecord(res.locals.organisation, null);
                     next();
                 } else {
-                    return res.status(403).json({ message: 'Invitation expired' });
+                    return res.status(403).json({ message: 'Bad invitation code' });
                 }
             }).catch((e) => { next(e); })
 
