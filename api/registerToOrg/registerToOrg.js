@@ -23,6 +23,8 @@ var router = express.Router();
 var Organisation = require('../../models/organisation');
 var InvitationCode = require('../../models/invitationCode');
 let KeenHelper = require('../../helpers/keen_helper');
+let ClientAuthHelper = require('../../helpers/client_auth_helper');
+let AgendaHelper = require('../../helpers/agenda_helper');
 
 /**
  * @description Try to find Organisation by tag provided.
@@ -76,9 +78,23 @@ router.post('/:orgId/:invitationCode?', function (req, res, next) {
 router.post('/:orgTag/:invitationCode?', function (req, res, next) {
     req.user.save()
         .then(() => {
+            // Keen event
             KeenHelper.recordEvent('userAttached', {
                 userEmitter: req.user._id
             }, res.locals.organisation._id || res.locals.organisation);
+
+            // Create job (onboard workflow)
+            ClientAuthHelper.fetchClientAccessToken()
+            .then(clientAccessToken => {
+                AgendaHelper.postAgendaJob(clientAccessToken, {
+                    name: 'sendEmailCompleteYourProfile',
+                    data: {
+                        userId: req.user._id,
+                        orgId: res.locals.organisation._id
+                    }
+                });
+            });
+
             return res.status(200).json({ message: 'User registered in organisation.', organisation: res.locals.organisation, user: req.user });
         }).catch((err) => { return next(err); });
 });
