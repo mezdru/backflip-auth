@@ -45,6 +45,7 @@
     "passport-http-bearer": "^1.0.1",
     "passport-oauth2-client-password": "^0.1.2",
     "randomstring": "^1.1.5",
+    "request": "^2.88.0",
     "ua-parser": "^0.3.5",
     "validator": "^7.0.0"
   },
