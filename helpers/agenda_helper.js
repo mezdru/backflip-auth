@@ -15,7 +15,8 @@ class AgendaHelper {
 			}
 		}, (error, requestResponse, body) => {
 
-			if(error || (body && body.status && body.status !== 200) || (requestResponse.statusCode !== 200)) {
+			if(error || (body && body.status && body.status !== 200) || (requestResponse && requestResponse.statusCode !== 200)) {
+				console.log('AgendaHelper:postAgendaJob: ', error);
 				return reject(error);
 			}
 			return resolve(body.data);
