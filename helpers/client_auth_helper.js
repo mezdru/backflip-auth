@@ -1,5 +1,4 @@
 "use strict";
-let request = require('request');
 let crypto = require('crypto');
 let AccessTokenModel = require('../models/tokenModels').AccessTokenModel;
 let RefreshTokenModel = require('../models/tokenModels').RefreshTokenModel;
@@ -7,10 +6,6 @@ let UserSession = require('../models/userSession');
 /**
  */
 class ClientAuthHelper {
-
-	done(err, data) {
-		return data.access_token;
-	}
 
 	fetchClientAccessToken() {
 		return new Promise((resolve, reject) => {
