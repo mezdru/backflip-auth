@@ -13,7 +13,7 @@ class ClientAuthHelper {
 			this.generateTokens(process.env.LOCALE_CLIENT_ID)
 				.then(aToken => {
 					resolve(aToken);
-				}).catch(e => reject(e));
+				}).catch(e => {console.log(e); reject(e)});
 		});
 	}
 
