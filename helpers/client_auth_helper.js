@@ -1,28 +1,51 @@
 "use strict";
 let request = require('request');
+let crypto = require('crypto');
+let AccessTokenModel = require('../models/tokenModels').AccessTokenModel;
+let RefreshTokenModel = require('../models/tokenModels').RefreshTokenModel;
+let UserSession = require('../models/userSession');
 /**
  */
 class ClientAuthHelper {
 
+	done(err, data) {
+		return data.access_token;
+	}
+
 	fetchClientAccessToken() {
 		return new Promise((resolve, reject) => {
-			request.post({
-				url: (process.env.NODE_ENV == 'development' ? 'http://'+process.env.HOST_AUTH : 'https://localhost') + `/locale`,
-				json: true,
-				body: {
-					client_id: process.env.LOCALE_CLIENT_ID,
-					client_secret: process.env.LOCALE_CLIENT_SECRET,
-					grant_type: 'client_credentials',
-					scope: 'agenda'
-				}
-			}, (error, requestResponse, body) => {
-				if (error || (body && body.status && body.status !== 200) || (requestResponse && requestResponse.statusCode !== 200)) {
-					console.log('error in accesstoken: ', error);
-					return reject(error);
-				}
-				return resolve(body.access_token);
-			});
+			this.generateTokens(process.env.LOCALE_CLIENT_ID)
+				.then(aToken => {
+					resolve(aToken);
+				}).catch(e => reject(e));
 		});
+	}
+
+	// @todo : not a good way to get access token for client, but heroku doesn't allow local request ...
+	generateTokens(clientId) {
+		let model = { userId: null, clientId: clientId };
+		let tokenValue = crypto.randomBytes(32).toString('hex');
+		let refreshTokenValue = crypto.randomBytes(32).toString('hex');
+
+		model.token = refreshTokenValue;
+
+		return (new RefreshTokenModel(model)).save()
+			.then((refreshToken) => {
+				model.token = tokenValue;
+				return (new AccessTokenModel(model)).save()
+					.then((accessToken) => {
+						let userSession = {
+							accessToken: accessToken._id,
+							refreshToken: refreshToken._id,
+							clientId: clientId,
+							user: null
+						};
+						return (new UserSession(userSession)).save()
+							.then(() => {
+								return tokenValue;
+							}).catch((err) => { console.log(err); return null; });
+					}).catch((err) => { console.log(err); return null; });
+			}).catch((err) => { console.log(err); return null; });
 	}
 }
 
