@@ -8,6 +8,7 @@ let UserSession = require('../models/userSession');
 class ClientAuthHelper {
 
 	fetchClientAccessToken() {
+		console.log('Fetch access token for client without request. (BAD)');
 		return new Promise((resolve, reject) => {
 			this.generateTokens(process.env.LOCALE_CLIENT_ID)
 				.then(aToken => {
