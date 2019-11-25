@@ -16,7 +16,8 @@ class ClientAuthHelper {
 		});
 	}
 
-	// @todo : not a good way to get access token for client, but heroku doesn't allow local request ...
+	// @todo : not a good way to get access token for client, but heroku doesn't allow local request ..
+	// have to find another method, but don't have time for now.
 	generateTokens(clientId) {
 		let model = { userId: null, clientId: clientId };
 		let tokenValue = crypto.randomBytes(32).toString('hex');
