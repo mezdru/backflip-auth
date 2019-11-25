@@ -92,8 +92,8 @@ router.post('/:orgTag/:invitationCode?', function (req, res, next) {
                         userId: req.user._id,
                         orgId: res.locals.organisation._id
                     }
-                }).catch(e => console.log(e));
-            }).catch(e => console.log(e));
+                }).catch(e => console.log("registerToOrg:postAgendaJob: ", e));
+            }).catch(e => console.log("registerToOrg:fetchClientAccessToken: ", e));
 
             return res.status(200).json({ message: 'User registered in organisation.', organisation: res.locals.organisation, user: req.user });
         }).catch((err) => { return next(err); });

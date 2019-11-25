@@ -13,7 +13,7 @@ class ClientAuthHelper {
 			this.generateTokens(process.env.LOCALE_CLIENT_ID)
 				.then(aToken => {
 					resolve(aToken);
-				}).catch(e => {console.log(e); reject(e)});
+				}).catch(e => {console.log("ClientAuthHelper:fetchClientAccessToken:generateTokens: ", e); reject(e)});
 		});
 	}
 
@@ -40,9 +40,9 @@ class ClientAuthHelper {
 						return (new UserSession(userSession)).save()
 							.then(() => {
 								return tokenValue;
-							}).catch((err) => { console.log(err); return null; });
-					}).catch((err) => { console.log(err); return null; });
-			}).catch((err) => { console.log(err); return null; });
+							}).catch((err) => { console.log("ClientAuthHelper:generateTokens:UserSession:save: ", err); return null; });
+					}).catch((err) => { console.log("ClientAuthHelper:generateTokens:AccessToken:save: ", err); return null; });
+			}).catch((err) => { console.log("ClientAuthHelper:generateTokens:RefreshToken:save: ", err); return null; });
 	}
 }
 
