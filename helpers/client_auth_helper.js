@@ -7,7 +7,7 @@ class ClientAuthHelper {
 	fetchClientAccessToken() {
 		return new Promise((resolve, reject) => {
 			request.post({
-				url: (process.env.NODE_ENV == 'development' ? 'http://' : 'https://') + `${process.env.HOST_AUTH}/locale`,
+				url: (process.env.NODE_ENV == 'development' ? 'http://'+process.env.HOST_AUTH : 'https://localhost') + `/locale`,
 				json: true,
 				body: {
 					client_id: process.env.LOCALE_CLIENT_ID,
