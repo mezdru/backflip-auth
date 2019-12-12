@@ -51,7 +51,7 @@ exports.getInvitationCodes = async (req, res, next) => {
 
     }).catch(e => next(e));
   } else {
-    InvitationCode.find()
+    InvitationCode.find(req.query)
     .then(invitationCodes => {
       if(invitationCodes.length === 0) {
         req.backflipAuth = {message: 'Invitation codes not found', status: 404};
