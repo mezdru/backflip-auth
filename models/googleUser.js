@@ -68,7 +68,6 @@ GoogleUserSchema.statics.findByGoogleOrCreate = async (profileGoogle, accessToke
       }).catch();
     } else {
       // It's a Register
-      console.log(profileGoogle);
       return (new GoogleUser({
         googleId: profileGoogle.id,
         name: profileGoogle.displayName,
