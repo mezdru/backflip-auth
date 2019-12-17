@@ -68,12 +68,13 @@ GoogleUserSchema.statics.findByGoogleOrCreate = async (profileGoogle, accessToke
       }).catch();
     } else {
       // It's a Register
+      console.log(profileGoogle);
       return (new GoogleUser({
         googleId: profileGoogle.id,
         name: profileGoogle.displayName,
         email: profileGoogle.email || profileGoogle.emails[0].value,
         emails: profileGoogle.emails,
-        pictures: profileGoogle.photos,
+        pictures: GoogleUser.formatGooglePhotos(profileGoogle.photos),
         accessToken: accessToken,
         refreshToken: refreshToken,
         language: profileGoogle.language,
@@ -84,6 +85,17 @@ GoogleUserSchema.statics.findByGoogleOrCreate = async (profileGoogle, accessToke
         }
       })).save();
     }
+  });
+}
+
+// Replace last occurrence of s50 (size  = 50px) by s1000
+GoogleUserSchema.statics.formatGooglePhotos = (photos) => {
+  if(!photos || photos.length === 0) return photos;
+  return photos.map(photo => {
+    var n = photo.value.lastIndexOf('s50');
+    return {
+      value: photo.value.slice(0, n) + photo.value.slice(n).replace('s50', 's1000')
+    };
   });
 }
 
