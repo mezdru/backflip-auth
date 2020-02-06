@@ -49,5 +49,7 @@
     "ua-parser": "^0.3.5",
     "validator": "^7.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
 }
