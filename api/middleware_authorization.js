@@ -43,7 +43,6 @@ router.use((req, res, next) => {
 
 router.use(function (req, res, next) {
 	Organisation.findOne({ '_id': req.organisationId })
-		.populate('featuredWingsFamily', '_id tag type name name_translated picture intro')
 		.then(organisation => {
 			if (!organisation) return res.status(404).json({ message: 'Organisation not found' });
 
